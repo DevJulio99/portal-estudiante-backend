@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj": {}
+    "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj": {}
   },
   "projects": {
-    "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj": {
+    "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
+        "projectUniqueName": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
         "projectName": "MyPortalStudent",
-        "projectPath": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
+        "projectPath": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
         "packagesPath": "C:\\Users\\WILLIAM\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\obj\\",
+        "outputPath": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

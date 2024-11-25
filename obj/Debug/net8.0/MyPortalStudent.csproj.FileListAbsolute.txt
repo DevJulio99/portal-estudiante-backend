@@ -21,3 +21,4 @@ c:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Debug\ne
 c:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Debug\net8.0\MyPortalStudent.genruntimeconfig.cache
 c:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Debug\net8.0\ref\MyPortalStudent.dll
 c:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\bin\Debug\net8.0\Npgsql.dll
+c:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Debug\net8.0\MyPortalStudent.sourcelink.json

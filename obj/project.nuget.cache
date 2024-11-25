@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Mcvv/nQPBfs=",
+  "dgSpecHash": "UTiqRr46rcM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
+  "projectFilePath": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\WILLIAM\\.nuget\\packages\\microsoft.extensions.configuration\\8.0.0\\microsoft.extensions.configuration.8.0.0.nupkg.sha512",
     "C:\\Users\\WILLIAM\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\8.0.0\\microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
@@ -50,7 +50,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'Npgsql' 4.0.12 has a known high severity vulnerability, https://github.com/advisories/GHSA-x9vc-6hfv-hg8c",
+      "message": "El paquete \"Npgsql\" 4.0.12 tiene una vulnerabilidad de gravedad alta conocida, https://github.com/advisories/GHSA-x9vc-6hfv-hg8c",
       "libraryId": "Npgsql",
       "targetGraphs": [
         "net8.0"

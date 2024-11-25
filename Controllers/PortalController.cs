@@ -66,5 +66,64 @@ namespace MyPortalStudent.Controllers
                 }
             }
         }
+
+        [HttpGet("HorarioxId/{idAlum}/{fechaInicio}/{fechaFin}")]
+        public async Task<ActionResult> GetHorarioId(int idAlum, string fechaInicio, string fechaFin)
+        {
+            try
+            {
+                var data = await _funcionesApi.getHorarioId(idAlum, fechaInicio, fechaFin);
+                var apiResult = new ApiResponse<List<HorarioResponse>>{ Success = true, Message = "Se encontro horario", Data = data };
+                if(data.Count == 0){
+                    apiResult = new ApiResponse<List<HorarioResponse>>{ Success = false, Message = "No se encontro horario", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
+        [HttpGet("CursosxId/{idAlum}")]
+        public async Task<ActionResult> GetCursos(int idAlum)
+        {
+            try
+            {
+                var data = await _funcionesApi.getCursos(idAlum);
+                var apiResult = new ApiResponse<List<CursoDTO>>{ Success = true, Message = "Se encontro cursos", Data = data };
+                if(data.Count == 0){
+                    apiResult = new ApiResponse<List<CursoDTO>>{ Success = false, Message = "No se encontro cursos", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
+
+
     }
 }
