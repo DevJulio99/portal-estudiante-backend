@@ -2123,11 +2123,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
+      "projectUniqueName": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
       "projectName": "MyPortalStudent",
-      "projectPath": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
+      "projectPath": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\MyPortalStudent.csproj",
       "packagesPath": "C:\\Users\\WILLIAM\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\obj\\",
+      "outputPath": "C:\\Users\\WILLIAM\\Desktop\\maquetado-template-01\\back\\MyPortalStudent\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -2200,17 +2200,5 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "El paquete \"Npgsql\" 4.0.12 tiene una vulnerabilidad de gravedad alta conocida, https://github.com/advisories/GHSA-x9vc-6hfv-hg8c",
-      "libraryId": "Npgsql",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    }
-  ]
+  }
 }

@@ -54,7 +54,7 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaAlumnos;
         }
 
-        public async Task<List<AlumnoDTO>> getAlumnosId(int idAlum)
+        public async Task<List<PerfilDTO>> getAlumnosId(int idAlum)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
@@ -63,30 +63,102 @@ namespace APIPostulaEnrolamiento.Funciones
             using NpgsqlCommand cmd = new NpgsqlCommand($"select * from alumno where id_alumno = {idAlum}", connection);
 
             using NpgsqlDataReader reader = cmd.ExecuteReader();
-            var listaAlumnos = new List<AlumnoDTO>([]);
-            // double[] data = [];
-
-            // var ata_ = reader.Read();
+            var listaAlumnos = new List<PerfilDTO>([]);
 
             while (reader.Read())
             {
-                listaAlumnos.Add(new AlumnoDTO
+                listaAlumnos.Add(new PerfilDTO
                 {
-                    id_alumno = (int)reader["id_alumno"],
-                    codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
-                    nombre = reader["nombre"].ToString() ?? "",
-                    apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
-                    apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
-                    dni = reader["dni"].ToString() ?? "",
-                    correo = reader["correo"].ToString() ?? "",
+                    idBanner = "",
+                    pidm = "",
+                    codLineaNegocio = "",
+                    codAlumno = reader["codigo_alumno"].ToString() ?? "",
+                    codPersona = "",
+                    codUsuario = "",
+                    codSede = "",
+                    apePatImag = reader["apellido_paterno"].ToString() ?? "",
+                    apeMatImag = reader["apellido_materno"].ToString() ?? "",
+                    nombresImag = "",
+                    tipoDocumento = "",
+                    documenIdentida = reader["dni"].ToString() ?? "",
+                    codModalidadEstActual = "",
+                    codPeriodoActual = "",
+                    codPeriodoBanner = "",
+                    codPeriodoBannerCatalogo = "",
+                    codProductoActual = "",
+                    codPrograma = "",
+                    codNivel = "",
+                    desNivel = "",
+                    codCampus = "",
+                    desCampus = "",
+                    codEstadoAlumno = "",
+                    desEstadoAlumno = "",
+                    codTipoAlumno = "",
+                    desTipoAlumno = reader["tipo_alumno"].ToString() ?? "",
+                    codTipoAprendizaje = "",
+                    desTipoAprendizaje = "",
+                    codTipoIngreso = "",
+                    desTipoIngreso = "",
+                    desProducto = "",
+                    desPrograma = "",
+                    usuarioEmail = "",
+                    facultad = "",
+                    facultadId = "",
+                    fotoUrl = "",//reader["foto_perfil"].ToString() ?? "",
                     fechaNacimiento = reader["fecha_nacimiento"].ToString() ?? "",
+                    sexo = reader["genero"].ToString() ?? "",
                     telefono = reader["telefono"].ToString() ?? "",
+                    celular = "",
+                    ciudad = "",
                     direccion = reader["direccion"].ToString() ?? "",
-                    fotoPerfil = reader["foto_perfil"].ToString() ?? "",
-                    genero = reader["genero"].ToString() ?? "",
-                    tipoAlumno = reader["tipo_alumno"].ToString() ?? "",
-                    observaciones = reader["observaciones"].ToString() ?? "",
-                    apoderado = reader["apoderado"].ToString() ?? "",
+                    egresado = "",
+                    ciclo = "",
+                    fullName = (reader["nombre"].ToString() ?? "") + " " + (reader["apellido_paterno"].ToString() ?? "") + " " + (reader["apellido_materno"].ToString() ?? ""),
+                    tipoPersona = "",
+                    codTipoUsuario = "",
+                    correoPersonal = reader["correo"].ToString() ?? "",
+                    cicloIngreso = "",
+                    fotoUrlLow = "",
+                    urbanizacion = "",
+                    departamento = "",
+                    distrito = "",
+                    contactoDeEmergenciaNombre = "",
+                    contactoDeEmergenciaApellido = "",
+                    contactoDeEmergenciaCelular = "",
+                    situacionLaboral = "",
+                    tipoDeEmpleo = "",
+                    modalidadEmpleo = "",
+                    empresa = "",
+                    ruc = "",
+                    direccionEmpresa = "",
+                    cargo = "",
+                    enlaceLinkedin = "",
+                    infoJefeNombre = "",
+                    infoJefeCargo = "",
+                    infoJefeCorreo = "",
+                    infoJefeTelefono = "",
+                    zipCode = "",
+                    status = "",
+                    presentationLetterStatusId = "",
+                    phoneHome = "",
+                    autorizaAdicionales = false,
+                    autorizaAlumni = false,
+                    autorizaDatosPersonales = false
+                    // id_alumno = (int)reader["id_alumno"],
+                    // codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
+                    // nombre = reader["nombre"].ToString() ?? "",
+                    // apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
+                    // apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
+                    // dni = reader["dni"].ToString() ?? "",
+                    // correo = reader["correo"].ToString() ?? "",
+                    // fechaNacimiento = reader["fecha_nacimiento"].ToString() ?? "",
+                    // telefono = reader["telefono"].ToString() ?? "",
+                    // direccion = reader["direccion"].ToString() ?? "",
+                    // fotoPerfil = reader["foto_perfil"].ToString() ?? "",
+                    // genero = reader["genero"].ToString() ?? "",
+                    // tipoAlumno = reader["tipo_alumno"].ToString() ?? "",
+                    // observaciones = reader["observaciones"].ToString() ?? "",
+                    // apoderado = reader["apoderado"].ToString() ?? "",
                 });
             }
 

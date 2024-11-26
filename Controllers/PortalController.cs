@@ -45,9 +45,9 @@ namespace MyPortalStudent.Controllers
             try
             {
                 var data = await _funcionesApi.getAlumnosId(idAlum);
-                var apiResult = new ApiResponse<List<AlumnoDTO>>{ Success = true, Message = "Se encontro alumno", Data = data };
+                var apiResult = new ApiResponse<List<PerfilDTO>>{ Success = true, Message = "Se encontro alumno", Data = data };
                 if(data.Count == 0){
-                    apiResult = new ApiResponse<List<AlumnoDTO>>{ Success = false, Message = "No se encontro alumno", Data = [] };
+                    apiResult = new ApiResponse<List<PerfilDTO>>{ Success = false, Message = "No se encontro alumno", Data = [] };
                     return NotFound(apiResult);
                 }
                 return Ok(apiResult);
