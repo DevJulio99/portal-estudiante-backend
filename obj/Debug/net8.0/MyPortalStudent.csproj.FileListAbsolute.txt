@@ -46,3 +46,11 @@ C:\Users\user\Documents\PORTAL\portal-estudiante-backend\obj\Debug\net8.0\refint
 C:\Users\user\Documents\PORTAL\portal-estudiante-backend\obj\Debug\net8.0\MyPortalStudent.pdb
 C:\Users\user\Documents\PORTAL\portal-estudiante-backend\obj\Debug\net8.0\MyPortalStudent.genruntimeconfig.cache
 C:\Users\user\Documents\PORTAL\portal-estudiante-backend\obj\Debug\net8.0\ref\MyPortalStudent.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Dapper.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\user\Documents\PORTAL\portal-estudiante-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

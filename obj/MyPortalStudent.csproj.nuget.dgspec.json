@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj": {}
+    "c:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj": {}
   },
   "projects": {
-    "C:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj": {
+    "c:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj",
+        "projectUniqueName": "c:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj",
         "projectName": "MyPortalStudent",
-        "projectPath": "C:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj",
+        "projectPath": "c:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\MyPortalStudent.csproj",
         "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\obj\\",
+        "outputPath": "c:\\Users\\user\\Documents\\PORTAL\\portal-estudiante-backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -46,13 +46,17 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[2.1.35, )"
+            },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
               "version": "[8.0.0, )"
             },
             "Npgsql": {
               "target": "Package",
-              "version": "[4.0.12, )"
+              "version": "[9.0.1, )"
             },
             "Swashbuckle.AspNetCore.SwaggerGen": {
               "target": "Package",
@@ -61,6 +65,10 @@
             "Swashbuckle.AspNetCore.SwaggerUI": {
               "target": "Package",
               "version": "[6.7.3, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.2.1, )"
             }
           },
           "imports": [

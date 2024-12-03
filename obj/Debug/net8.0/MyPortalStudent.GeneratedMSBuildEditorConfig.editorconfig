@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = MyPortalStudent
-build_property.ProjectDir = C:\Users\user\Documents\PORTAL\portal-estudiante-backend\
+build_property.ProjectDir = c:\Users\user\Documents\PORTAL\portal-estudiante-backend\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
