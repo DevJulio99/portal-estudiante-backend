@@ -1,4 +1,5 @@
 using APIPostulaEnrolamiento.Funciones;
+using JwtLoginService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
@@ -35,6 +36,8 @@ builder.Services.AddSwaggerGen(
 );
 
 builder.Services.AddScoped<IFuncionesApi, FuncionesCursos>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 var app = builder.Build();
 
 app.UseCors("validarConsumo");
