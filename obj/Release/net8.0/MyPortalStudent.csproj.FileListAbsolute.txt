@@ -1,5 +1,0 @@
-C:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Release\net8.0\MyPortalStudent.csproj.AssemblyReference.cache
-C:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Release\net8.0\MyPortalStudent.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Release\net8.0\MyPortalStudent.AssemblyInfoInputs.cache
-C:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Release\net8.0\MyPortalStudent.AssemblyInfo.cs
-C:\Users\WILLIAM\Desktop\maquetado-template-01\back\MyPortalStudent\obj\Release\net8.0\MyPortalStudent.csproj.CoreCompileInputs.cache
