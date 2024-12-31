@@ -6,5 +6,6 @@ public interface IFuncionesApi
         Task<List<HorarioResponse>> getHorarioId(int idAlum, string fechaInicio, string fechaFin);
 
         Task<List<CursoDTO>> getCursos(int idAlum);
+        Task<List<ReporteMatriculaColegioDTO>> getCursosColegio(int idAlum, int anio);
     }
 }

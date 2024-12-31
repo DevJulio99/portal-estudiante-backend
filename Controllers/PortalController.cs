@@ -12,8 +12,9 @@ namespace MyPortalStudent.Controllers
     {
         private readonly IFuncionesApi _funcionesApi;
 
-        public PortalController(IFuncionesApi funcionesApi) {
-          this._funcionesApi = funcionesApi;
+        public PortalController(IFuncionesApi funcionesApi)
+        {
+            this._funcionesApi = funcionesApi;
         }
 
         [HttpGet("Alumnos")]
@@ -45,9 +46,10 @@ namespace MyPortalStudent.Controllers
             try
             {
                 var data = await _funcionesApi.getAlumnosId(idAlum);
-                var apiResult = new ApiResponse<List<PerfilDTO>>{ Success = true, Message = "Se encontro alumno", Data = data };
-                if(data.Count == 0){
-                    apiResult = new ApiResponse<List<PerfilDTO>>{ Success = false, Message = "No se encontro alumno", Data = [] };
+                var apiResult = new ApiResponse<List<PerfilDTO>> { Success = true, Message = "Se encontro alumno", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<PerfilDTO>> { Success = false, Message = "No se encontro alumno", Data = [] };
                     return NotFound(apiResult);
                 }
                 return Ok(apiResult);
@@ -73,9 +75,10 @@ namespace MyPortalStudent.Controllers
             try
             {
                 var data = await _funcionesApi.getHorarioId(idAlum, fechaInicio, fechaFin);
-                var apiResult = new ApiResponse<List<HorarioResponse>>{ Success = true, Message = "Se encontro horario", Data = data };
-                if(data.Count == 0){
-                    apiResult = new ApiResponse<List<HorarioResponse>>{ Success = false, Message = "No se encontro horario", Data = [] };
+                var apiResult = new ApiResponse<List<HorarioResponse>> { Success = true, Message = "Se encontro horario", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<HorarioResponse>> { Success = false, Message = "No se encontro horario", Data = [] };
                     return NotFound(apiResult);
                 }
                 return Ok(apiResult);
@@ -101,9 +104,10 @@ namespace MyPortalStudent.Controllers
             try
             {
                 var data = await _funcionesApi.getCursos(idAlum);
-                var apiResult = new ApiResponse<List<CursoDTO>>{ Success = true, Message = "Se encontro cursos", Data = data };
-                if(data.Count == 0){
-                    apiResult = new ApiResponse<List<CursoDTO>>{ Success = false, Message = "No se encontro cursos", Data = [] };
+                var apiResult = new ApiResponse<List<CursoDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<CursoDTO>> { Success = false, Message = "No se encontro cursos", Data = [] };
                     return NotFound(apiResult);
                 }
                 return Ok(apiResult);
@@ -124,6 +128,34 @@ namespace MyPortalStudent.Controllers
         }
 
 
+        [HttpGet("CursosColegioxId/{idAlum}/{anio}")]
+        public async Task<ActionResult> GetCursosColegio(int idAlum, int anio)
+        {
+            try
+            {
+                var data = await _funcionesApi.getCursosColegio(idAlum, anio);
+                var apiResult = new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = false, Message = "No se encontro cursos", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
 
     }
 }

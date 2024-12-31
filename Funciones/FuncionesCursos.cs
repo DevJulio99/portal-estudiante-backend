@@ -368,7 +368,7 @@ namespace APIPostulaEnrolamiento.Funciones
                            codUsuarioDocente = ""
                        }
                     ],
-                    ciclo = reader["nivel_grado"].ToString() ?? "",
+                    ciclo = reader["ciclo"].ToString() ?? "",
                     creditos = "",
                     cantidadVeces = reader["veces"].ToString() ?? "0",
                     inasistencias = inasistencias > 0 ? inasistencias.ToString() : "0",
@@ -432,6 +432,75 @@ namespace APIPostulaEnrolamiento.Funciones
                 });
             }
             return listaHorario;
+        }
+
+        public async Task<List<ReporteMatriculaColegioDTO>> getCursosColegio(int idAlum, int anio)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from public.obtener_reporte_matricula_colegio({idAlum},{anio})", connection);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var listaReporteColegio = new List<ReporteMatriculaColegioDTO>([]);
+
+
+            while (reader.Read())
+            {
+                string codCurso = reader["cod_cursos_matriculados"].ToString() ?? "";
+                Boolean existeCurso = listaReporteColegio.Exists(x => x.codCurso == codCurso);
+
+                if (!existeCurso){
+                   listaReporteColegio.Add(new ReporteMatriculaColegioDTO {
+                    modalidad = "Presencial",
+                    codCurso = codCurso,
+                    descCurso = reader["cursos_matriculados"].ToString() ?? "",
+                    periodo = reader["periodo_academico"].ToString() ?? "",
+                    salon = "",
+                    seccion = reader["seccion"].ToString() ?? "",
+                    docente = [
+                       new DocenteCursoDTO {
+                           nombresDocentes = reader["docente_nombre"].ToString() ?? "",
+                           apellidoPaternoDocente = "",
+                           apellidoMaternoDocente = "",
+                           emailDocente = "",
+                           descCategoriaDocente = "",
+                           codCategoriaDocente = "",
+                           codUsuarioDocente = ""
+                       }
+                    ],
+                    ciclo = "",
+                    creditos = "",
+                    cantidadVeces = "0",
+                    inasistencias = "0",
+                    statusCurso = "Iniciado",
+                    orden = 1,
+                    notaFinal = 0,
+                    tieneHorario = false,
+                    nivel = reader["nivel"].ToString() ?? "",
+                    periodoAcademico = reader["periodo_academico"].ToString() ?? "",
+                    fechaInicio = reader["fecha_inicio"].ToString() ?? "",
+                    fechaFin = reader["fecha_fin"].ToString() ?? "",
+                    // alumnoNombre = reader["alumno_nombre"].ToString() ?? "",
+                    // alumnoApellidoPaterno = reader["alumno_apellido_paterno"].ToString() ?? "",
+                    // alumnoApellidoMaterno = reader["alumno_apellido_materno"].ToString() ?? "",
+                    // codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
+                    // cursosMatriculados = reader["cursos_matriculados"].ToString() ?? "",
+                    // docenteNombre = reader["docente_nombre"].ToString() ?? "",
+                    // estadoMatricula = reader["estado_matricula"].ToString() ?? "",
+                    // fechaFin = reader["fecha_fin"].ToString() ?? "",
+                    // fechaInicio = reader["fecha_inicio"].ToString() ?? "",
+                    // grado = reader["grado"].ToString() ?? "",
+                    // nivel = reader["nivel"].ToString() ?? "",
+                    // periodoAcademico = reader["periodo_academico"].ToString() ?? "",
+                    // seccion = reader["seccion"].ToString() ?? "",
+                    // tipoMatricula = reader["tipo_matricula"].ToString() ?? "",          
+                });
+                }
+                
+            }
+            return listaReporteColegio;
         }
 
 
