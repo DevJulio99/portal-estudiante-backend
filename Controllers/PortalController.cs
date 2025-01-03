@@ -157,5 +157,34 @@ namespace MyPortalStudent.Controllers
             }
         }
 
+        [HttpGet("Asistencias/{idAlum}/{bimester}/{anio}")]
+        public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string bimester, int anio)
+        {
+            try
+            {
+                var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, anio);
+                var apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = true, Message = "Se encontro asistencias", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = false, Message = "No se encontro asistencias", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
     }
 }

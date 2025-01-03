@@ -18,6 +18,7 @@ namespace MyPortalStudent.Domain
         public required int notaFinal { get; set; }
         public required Boolean tieneHorario { get; set; }
         public string periodoAcademico { get; set; }
+        public string grado { get; set; }
         public string nivel { get; set; }
         public string fechaInicio { get; set; }
         public string fechaFin { get; set; }
