@@ -1,3 +1,4 @@
+using System.Globalization;
 using MyPortalStudent.Domain;
 using MyPortalStudent.Domain.Ifunciones;
 using Npgsql;
@@ -448,13 +449,16 @@ namespace APIPostulaEnrolamiento.Funciones
 
             while (reader.Read())
             {
-                string codCurso = reader["cod_cursos_matriculados"].ToString() ?? "";
-                Boolean existeCurso = listaReporteColegio.Exists(x => x.codCurso == codCurso);
+                var fechaActual = DateTime.Now;
+                var fechaActualTiempo = fechaActual.Ticks;
+                var fechaIniciotiempo = DateTime.ParseExact(reader["fecha_inicio"].ToString(), "d/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var fechaFintiempo = DateTime.ParseExact(reader["fecha_fin"].ToString(), "d/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var actualBimestre = fechaActualTiempo >= fechaIniciotiempo.Ticks && fechaActualTiempo <= fechaFintiempo.Ticks;
 
-                if (!existeCurso){
+                if(actualBimestre){
                    listaReporteColegio.Add(new ReporteMatriculaColegioDTO {
                     modalidad = "Presencial",
-                    codCurso = codCurso,
+                    codCurso = reader["cod_cursos_matriculados"].ToString() ?? "",
                     descCurso = reader["cursos_matriculados"].ToString() ?? "",
                     periodo = reader["periodo_academico"].ToString() ?? "",
                     salon = "",
@@ -531,6 +535,123 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaAsistencias;
         }
 
+        public async Task<List<HorarioxAulaDTO>> getHorariosxAula(int idAula)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_aula({idAula})", connection);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var listaHorarios = new List<HorarioxAulaDTO>([]);
+
+
+            while (reader.Read())
+            {
+                   listaHorarios.Add(new HorarioxAulaDTO {
+                    descripcionCurso = reader["descripcion_curso"].ToString() ?? "", 
+                    descripcionAula = reader["descripcion_aula"].ToString() ?? "",
+                    nombreDia = reader["nombre_dia"].ToString() ?? "",
+                    horaInicio = reader["hora_inicio"].ToString() ?? "",
+                    horaFin = reader["hora_fin"].ToString() ?? "",
+                    nombreDocente = reader["nombre_docente"].ToString() ?? "",
+                    apellidoPaternoDocente = reader["apellido_paterno_docente"].ToString() ?? "",
+                    apellidoMaternoDocente = reader["apellido_materno_docente"].ToString() ?? "",
+                    seccion = reader["seccion"].ToString() ?? "",        
+                });
+                
+            }
+            return listaHorarios;
+        }
+
+        public async Task<List<HorarioCursoxAlumnnoDTO>> getHorariosCursoxAlumno(int idAlumno)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_cursos_por_alumno({idAlumno})", connection);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var listaHorarios = new List<HorarioCursoxAlumnnoDTO>([]);
+
+
+            while (reader.Read())
+            {
+                   listaHorarios.Add(new HorarioCursoxAlumnnoDTO {
+                    nombreAlumno = reader["nombre_alumno"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
+                    descripcionSeccion = reader["descripcion_seccion"].ToString() ?? "",    
+                    descripcionCurso = reader["descripcion_curso"].ToString() ?? "", 
+                    nombreDia = reader["nombre_dia"].ToString() ?? "",
+                    horaInicio = reader["hora_inicio"].ToString() ?? "",
+                    horaFin = reader["hora_fin"].ToString() ?? "",       
+                });
+                
+            }
+            return listaHorarios;
+        }
+
+        public async Task<List<HorarioCursoxDocenteDTO>> getHorarioCursoxDocente(int idDocente)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_cursos_por_docente({idDocente})", connection);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var listaHorarios = new List<HorarioCursoxDocenteDTO>([]);
+
+
+            while (reader.Read())
+            {
+                   listaHorarios.Add(new HorarioCursoxDocenteDTO {
+                    nombreDocente = reader["nombre_docente"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
+                    descripcionSeccion = reader["descripcion_seccion"].ToString() ?? "",    
+                    descripcionCurso = reader["descripcion_curso"].ToString() ?? "", 
+                    nombreDia = reader["nombre_dia"].ToString() ?? "",
+                    horaInicio = reader["hora_inicio"].ToString() ?? "",
+                    horaFin = reader["hora_fin"].ToString() ?? "",       
+                });
+                
+            }
+            return listaHorarios;
+        }
+
+        public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_notas_por_bimestre({idAlum}, '{tipoPeriodo}', {anio})", connection);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var listaNotas = new List<NotasxBimestreDTO>([]);
+
+
+            while (reader.Read())
+            {
+                   listaNotas.Add(new NotasxBimestreDTO {
+                    alumno = reader["alumno"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno"].ToString() ?? "",   
+                    descripcionCurso = reader["descripcion_curso"].ToString() ?? "",    
+                    codigoPeriodo = reader["codigo_periodo"].ToString() ?? "",
+                    descripcionPeriodo = reader["descripcion_periodo"].ToString() ?? "",   
+                    nota = reader["nota"].ToString() ?? "",
+                    peso = reader["peso"].ToString() ?? "",
+                    tipoNota = reader["tipo_nota"].ToString() ?? "",
+                });
+                
+            }
+            return listaNotas;
+        }
 
     }
 }

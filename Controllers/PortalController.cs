@@ -186,5 +186,120 @@ namespace MyPortalStudent.Controllers
             }
         }
 
+        [HttpGet("HorariosxAula/{idAula}")]
+        public async Task<ActionResult> GetAsistenciaAlumno(int idAula)
+        {
+            try
+            {
+                var data = await _funcionesApi.getHorariosxAula(idAula);
+                var apiResult = new ApiResponse<List<HorarioxAulaDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<HorarioxAulaDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
+        [HttpGet("HorariosCursosxAlumno/{idAlumno}")]
+        public async Task<ActionResult> GetHorariosCursoxAlumno(int idAlumno)
+        {
+            try
+            {
+                var data = await _funcionesApi.getHorariosCursoxAlumno(idAlumno);
+                var apiResult = new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
+        [HttpGet("HorariosCursosxDocente/{idDocente}")]
+        public async Task<ActionResult> GetHorariosCursoxDocente(int idDocente)
+        {
+            try
+            {
+                var data = await _funcionesApi.getHorarioCursoxDocente(idDocente);
+                var apiResult = new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
+
+        [HttpGet("NotasxBimestre/{idAlum}/{tipoPeriodo}/{anio}")]
+        public async Task<ActionResult> GetNotasxBimestre(int idAlum, string tipoPeriodo, int anio)
+        {
+            try
+            {
+                var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio);
+                var apiResult = new ApiResponse<List<NotasxBimestreDTO>> { Success = true, Message = "Se encontro notas", Data = data };
+                if (data.Count == 0)
+                {
+                    apiResult = new ApiResponse<List<NotasxBimestreDTO>> { Success = false, Message = "No se encontro notas", Data = [] };
+                    return NotFound(apiResult);
+                }
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
     }
 }
