@@ -21,7 +21,7 @@ namespace APIPostulaEnrolamiento.Funciones
         public async Task<UserDto> ValidateUserAsync(LoginRequestDto loginRequest)
         {
             using var connection = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            const string query = "SELECT Email, Name, Phone, Role FROM Users WHERE Email = @Email AND Password = @Password";
+            const string query = "SELECT Id, Email, Name, Phone, Role FROM Users WHERE Email = @Email AND Password = @Password";
             return await connection.QueryFirstOrDefaultAsync<UserDto>(query, new { loginRequest.Email, loginRequest.Password });
         }
 
@@ -32,6 +32,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
             var claims = new List<Claim>
             {
+                new Claim("Id", user.Id.ToString()),
                 new Claim("Email", user.Email),
                 new Claim("Name", user.Name),
                 new Claim("Phone", user.Phone),
