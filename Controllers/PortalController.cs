@@ -157,12 +157,12 @@ namespace MyPortalStudent.Controllers
             }
         }
 
-        [HttpGet("Asistencias/{idAlum}/{bimester}/{anio}")]
-        public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string bimester, int anio)
+        [HttpGet("Asistencias/{idAlum}/{bimester}/{codCurso}/{anio}")]
+        public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string bimester, string codCurso, int anio)
         {
             try
             {
-                var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, anio);
+                var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, codCurso, anio);
                 var apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = true, Message = "Se encontro asistencias", Data = data };
                 if (data.Count == 0)
                 {

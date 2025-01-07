@@ -6,5 +6,7 @@ public class AlumnoAsistenciaDTO
     public required string estadoAsistencia { get; set; }
     public required string descripcionCurso { get; set; }
     public required string modalidad { get; set; }
+    public required string horaInicio { get; set; }
+    public required string horaFin { get; set; }
 }
 }

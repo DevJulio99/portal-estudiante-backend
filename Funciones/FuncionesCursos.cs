@@ -509,13 +509,13 @@ namespace APIPostulaEnrolamiento.Funciones
         }
 
 
-        public async Task<List<AlumnoAsistenciaDTO>> getAsistenciasAlumno(int idAlum, string bimester, int anio)
+        public async Task<List<AlumnoAsistenciaDTO>> getAsistenciasAlumno(int idAlum, string bimester, string codCurso , int anio)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_asistencias_alumno_bimestre({idAlum},'{bimester}',{anio})", connection);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_asistencias_alumno_bimestre({idAlum},'{bimester}','{codCurso}',{anio})", connection);
 
             using NpgsqlDataReader reader = cmd.ExecuteReader();
             var listaAsistencias = new List<AlumnoAsistenciaDTO>([]);
@@ -528,7 +528,9 @@ namespace APIPostulaEnrolamiento.Funciones
                     dia = reader["dia"].ToString() ?? "",  
                     estadoAsistencia = reader["estado_asistencia"].ToString() ?? "",    
                     descripcionCurso = reader["descripcion_curso"].ToString() ?? "",
-                    modalidad = reader["modalidad"].ToString() ?? "" 
+                    modalidad = reader["modalidad"].ToString() ?? "",
+                    horaInicio =  reader["hora_inicio"].ToString() ?? "",
+                    horaFin = reader["hora_fin"].ToString() ?? "",
                 });
                 
             }
