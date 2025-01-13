@@ -468,7 +468,7 @@ namespace APIPostulaEnrolamiento.Funciones
                            nombresDocentes = reader["docente_nombre"].ToString() ?? "",
                            apellidoPaternoDocente = "",
                            apellidoMaternoDocente = "",
-                           emailDocente = "",
+                           emailDocente = reader["docente_email"].ToString() ?? "",
                            descCategoriaDocente = "",
                            codCategoriaDocente = "",
                            codUsuarioDocente = ""
