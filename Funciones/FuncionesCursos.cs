@@ -250,8 +250,8 @@ namespace APIPostulaEnrolamiento.Funciones
                                 new ProfesorDTO {
                                  idBanner = "",
                                  nombres = reader["nombre_docente"].ToString() ?? "",
-                                 apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + (reader["apellidos_materno_docente"].ToString() ?? ""),
-                                 nombreCompleto = (reader["nombre_docente"].ToString() ?? "") +(reader["apellido_paterno_docente"].ToString() ?? "") + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                                 apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                                 nombreCompleto = (reader["nombre_docente"].ToString() ?? "") + " " + (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
                                  correo = reader["correo_docente"].ToString() ?? "",
                                  pidm = "",
                                  tipoDesc =reader["tipo_docente"].ToString() ?? "",
@@ -296,8 +296,8 @@ namespace APIPostulaEnrolamiento.Funciones
                                 new ProfesorDTO {
                                  idBanner = "",
                                  nombres = reader["nombre_docente"].ToString() ?? "",
-                                 apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + (reader["apellidos_materno_docente"].ToString() ?? ""),
-                                 nombreCompleto = (reader["nombre_docente"].ToString() ?? "") +(reader["apellido_paterno_docente"].ToString() ?? "") + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                                 apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                                 nombreCompleto = (reader["nombre_docente"].ToString() ?? "") + " " + (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
                                  correo = reader["correo_docente"].ToString() ?? "",
                                  pidm = "",
                                  tipoDesc =reader["tipo_docente"].ToString() ?? "",
