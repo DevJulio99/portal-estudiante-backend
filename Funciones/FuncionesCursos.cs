@@ -208,9 +208,9 @@ namespace APIPostulaEnrolamiento.Funciones
             while (reader.Read())
             {
                 int actualIdMatricula = (int)reader["id_matricula"];
-                if (!listaIdsMatriculas.Contains(actualIdMatricula))
-                {
-                    listaIdsMatriculas.Add(actualIdMatricula);
+                //if (!listaIdsMatriculas.Contains(actualIdMatricula))
+                //{
+                    //listaIdsMatriculas.Add(actualIdMatricula);
                     listaHorarios.Add(new HorarioResponse
                     {
                         idMatricula = actualIdMatricula,
@@ -262,53 +262,53 @@ namespace APIPostulaEnrolamiento.Funciones
                         }
                         ]
                     });
-                }
-                else
-                {
-                    int indexHorario = listaHorarios.FindIndex(x => x.idMatricula == actualIdMatricula);
-                    if (indexHorario >= 0)
-                    {
-                        listaHorarios[indexHorario].detalleHorario.Append(new DetalleHorarioDTO
-                        {
-                            titulo = "",
-                            nrc = "",
-                            descripMetodoEducativo = reader["modalidad_curso"].ToString() ?? "",
-                            codmetodoEducativo = "",
-                            descripMateria = reader["descripcion_curso"].ToString() ?? "",
-                            codMateria = reader["codigo_curso"].ToString() ?? "",
-                            codSeccion = reader["codigo_seccion"].ToString() ?? "",
-                            descripPartePeriodo = reader["descripcion_periodo"].ToString() ?? "",
-                            codPartePeriodo = "",
-                            cantidadVeces = reader["veces"].ToString() ?? "",
-                            codAula = reader["codigo_aula"].ToString() ?? "",
-                            descripAula = reader["descripcion_aula"].ToString() ?? "",
-                            codCampus = reader["codigo_sede"].ToString() ?? "",
-                            descripCampus = reader["descripcion_aula"].ToString() ?? "",
-                            codEdificio = "",
-                            descripEdificio = "",
-                            fechaInicio = reader["fecha_inicio"].ToString() ?? "",
-                            fechaFin = reader["fecha_fin"].ToString() ?? "",
-                            diaNombre = reader["nombre_dia"].ToString() ?? "",
-                            diaNumero = reader["numero_dia"].ToString() ?? "",
-                            horaInicio = reader["hora_inicio"].ToString() ?? "",
-                            horaFin = reader["hora_fin"].ToString() ?? "",
-                            profesor = [
-                                new ProfesorDTO {
-                                 idBanner = "",
-                                 nombres = reader["nombre_docente"].ToString() ?? "",
-                                 apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
-                                 nombreCompleto = (reader["nombre_docente"].ToString() ?? "") + " " + (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
-                                 correo = reader["correo_docente"].ToString() ?? "",
-                                 pidm = "",
-                                 tipoDesc =reader["tipo_docente"].ToString() ?? "",
-                                }
-                            ],
-                            orden = "",
-                            codCurso = ""
-                        });
-                    }
+                //}
+                // else
+                // {
+                //     int indexHorario = listaHorarios.FindIndex(x => x.idMatricula == actualIdMatricula);
+                //     if (indexHorario >= 0)
+                //     {
+                //         listaHorarios[indexHorario].detalleHorario.Append(new DetalleHorarioDTO
+                //         {
+                //             titulo = "",
+                //             nrc = "",
+                //             descripMetodoEducativo = reader["modalidad_curso"].ToString() ?? "",
+                //             codmetodoEducativo = "",
+                //             descripMateria = reader["descripcion_curso"].ToString() ?? "",
+                //             codMateria = reader["codigo_curso"].ToString() ?? "",
+                //             codSeccion = reader["codigo_seccion"].ToString() ?? "",
+                //             descripPartePeriodo = reader["descripcion_periodo"].ToString() ?? "",
+                //             codPartePeriodo = "",
+                //             cantidadVeces = reader["veces"].ToString() ?? "",
+                //             codAula = reader["codigo_aula"].ToString() ?? "",
+                //             descripAula = reader["descripcion_aula"].ToString() ?? "",
+                //             codCampus = reader["codigo_sede"].ToString() ?? "",
+                //             descripCampus = reader["descripcion_aula"].ToString() ?? "",
+                //             codEdificio = "",
+                //             descripEdificio = "",
+                //             fechaInicio = reader["fecha_inicio"].ToString() ?? "",
+                //             fechaFin = reader["fecha_fin"].ToString() ?? "",
+                //             diaNombre = reader["nombre_dia"].ToString() ?? "",
+                //             diaNumero = reader["numero_dia"].ToString() ?? "",
+                //             horaInicio = reader["hora_inicio"].ToString() ?? "",
+                //             horaFin = reader["hora_fin"].ToString() ?? "",
+                //             profesor = [
+                //                 new ProfesorDTO {
+                //                  idBanner = "",
+                //                  nombres = reader["nombre_docente"].ToString() ?? "",
+                //                  apellidos =  (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                //                  nombreCompleto = (reader["nombre_docente"].ToString() ?? "") + " " + (reader["apellido_paterno_docente"].ToString() ?? "") + " " + (reader["apellidos_materno_docente"].ToString() ?? ""),
+                //                  correo = reader["correo_docente"].ToString() ?? "",
+                //                  pidm = "",
+                //                  tipoDesc =reader["tipo_docente"].ToString() ?? "",
+                //                 }
+                //             ],
+                //             orden = "",
+                //             codCurso = ""
+                //         });
+                //     }
 
-                }
+                // }
 
 
             }
