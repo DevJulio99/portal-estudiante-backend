@@ -12,5 +12,8 @@ public interface IFuncionesApi
         Task<List<HorarioCursoxAlumnnoDTO>> getHorariosCursoxAlumno(int idAlumno);
         Task<List<HorarioCursoxDocenteDTO>> getHorarioCursoxDocente(int idDocente);
         Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio);
+
+        Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio);
+
     }
 }
