@@ -3,6 +3,8 @@ using JwtLoginService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
+using MyPortalStudent.Domain.IServices;
+using MyPortalStudent.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddHostedService<Worker>();
@@ -37,6 +39,8 @@ builder.Services.AddSwaggerGen(
 
 builder.Services.AddScoped<IFuncionesApi, FuncionesCursos>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICompetenciasGeneralesService, CompetenciasGeneralesService>();
+
 
 var app = builder.Build();
 
