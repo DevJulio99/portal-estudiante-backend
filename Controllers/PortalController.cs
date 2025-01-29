@@ -304,12 +304,30 @@ namespace MyPortalStudent.Controllers
         [HttpGet("alumno/{id}/{anio}")]
         public async Task<IActionResult> GetPagosPorAlumno(int id, int anio)
         {
-            var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);
-            if (pagos == null || pagos.Count == 0)
+            try
             {
-                return NotFound("No se encontraron pagos para este alumno.");
+                var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);
+                
+                if (pagos == null || pagos.Count == 0)
+                {
+                    return NotFound("No se encontraron pagos para este alumno.");
+                }
+                
+                var apiResult = new { Success = true, Data = pagos };
+                return Ok(apiResult);
             }
-            return Ok(pagos);
-        }        
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
     }
 }
