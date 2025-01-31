@@ -301,6 +301,7 @@ namespace MyPortalStudent.Controllers
                 }
             }
         }
+
         [HttpGet("alumno/{id}/{anio}")]
         public async Task<IActionResult> GetPagosPorAlumno(int id, int anio)
         {
@@ -314,6 +315,35 @@ namespace MyPortalStudent.Controllers
                 }
                 
                 var apiResult = new { Success = true, Data = pagos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
+
+        [HttpGet("CalendarioAcademico/{anio}")]
+        public async Task<IActionResult> GetCalendarioAcademico(int anio)
+        {
+            try
+            {
+                var calendario = await _funcionesApi.GetCalendarioAcademico(anio);
+
+                if (calendario == null || calendario.Count == 0)
+                {
+                    return NotFound($"No se encontraron actividades para el año {anio}.");
+                }
+
+                var apiResult = new { Success = true, Data = calendario };
                 return Ok(apiResult);
             }
             catch (UnauthorizedAccessException ex)

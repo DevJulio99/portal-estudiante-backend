@@ -690,5 +690,36 @@ namespace APIPostulaEnrolamiento.Funciones
 
             return pagosList;
         }
+
+        public async Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Consulta SQL para obtener los calendarios para el año solicitado
+            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM calendario_academico WHERE EXTRACT(YEAR FROM fecha_inicio) = @anio OR EXTRACT(YEAR FROM fecha_fin) = @anio", connection);
+            cmd.Parameters.AddWithValue("anio", anio);
+
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var calendarioList = new List<CalendarioAcademicoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                calendarioList.Add(new CalendarioAcademicoDTO
+                {
+                    IdCalendario = (int)reader["id_calendario"],
+                    Actividad = reader["actividad"].ToString() ?? "",
+                    FechaInicio = (DateTime)reader["fecha_inicio"],
+                    FechaFin = (DateTime)reader["fecha_fin"],
+                    ModalidadEstudios = reader["modalidad_estudios"].ToString() ?? "",
+                    TipoActividad = reader["tipo_actividad"].ToString() ?? ""
+                });
+            }
+
+            return calendarioList;
+        }     
     }
 }
