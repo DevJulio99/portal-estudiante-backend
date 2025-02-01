@@ -155,6 +155,9 @@ namespace MyPortalStudent.Controllers
                 apiResult.Message = lista.Count > 0 ? "Se encontro postulante" : "No se pudo encontrar postulante";
                 apiResult.Success = lista.Count > 0;
                 apiResult.Data = lista;
+                if(lista.Count == 0){
+                    return this.StatusCode(404, apiResult);
+                }
                 return this.Ok(apiResult);
             }
             catch (Exception ex)
@@ -237,6 +240,9 @@ namespace MyPortalStudent.Controllers
                 apiResult.Message = lista.Count > 0 ? "Se encontro estados" : "No se pudo encontrar estados";
                 apiResult.Success = lista.Count > 0;
                 apiResult.Data = lista;
+                if(lista.Count == 0){
+                    return this.StatusCode(404, apiResult);
+                }
                 return this.Ok(apiResult);
             }
             catch (Exception ex)
