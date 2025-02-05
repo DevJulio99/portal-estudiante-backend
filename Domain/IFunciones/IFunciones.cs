@@ -14,6 +14,7 @@ public interface IFuncionesApi
         Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio);
         Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio);
         Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio);
+        Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria();
 
     }
 }

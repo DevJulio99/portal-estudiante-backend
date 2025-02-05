@@ -359,5 +359,36 @@ namespace MyPortalStudent.Controllers
                 return StatusCode(500, ex);
             }
         }
+
+        [HttpGet("DocumentosConCategoria")]
+        public async Task<ActionResult> GetDocumentosConCategoria()
+        {
+            try
+            {
+                var data = await _funcionesApi.GetDocumentosConCategoria();
+                var apiResult = new ApiResponse<List<CategoriaDocumentoDTO>> { Success = true, Message = "Se encontraron documentos", Data = data };
+
+                if (data == null || !data.Any())
+                {
+                    apiResult = new ApiResponse<List<CategoriaDocumentoDTO>> { Success = false, Message = "No se encontraron documentos", Data = new List<CategoriaDocumentoDTO>() };
+                    return NotFound(apiResult);
+                }
+
+                return Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return Unauthorized(errResponse);
+                    case ArgumentException _:
+                        return BadRequest(errResponse);
+                    default:
+                        return StatusCode(500, errResponse);
+                }
+            }
+        }
     }
 }

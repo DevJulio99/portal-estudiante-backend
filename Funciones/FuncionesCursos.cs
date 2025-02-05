@@ -720,6 +720,98 @@ namespace APIPostulaEnrolamiento.Funciones
             }
 
             return calendarioList;
-        }     
+        }
+
+        public async Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            string query = @"
+                SELECT 
+                    c.""ID_CATEGORIA_DOCUMENTO"",
+                    c.""STATUS"" AS categoria_status,
+                    c.""NOMBRE"" AS categoria_nombre,
+                    c.""DESCRIPCION"" AS categoria_descripcion,
+                    c.""IMAGEN"" AS categoria_imagen,
+                    c.""SECUENCIA"" AS categoria_secuencia,
+                    c.""DATE_CREATED"" AS categoria_date_created,
+                    d.""ID_DOCUMENTO"",
+                    d.""STATUS"" AS documento_status,
+                    d.""TITULO"" AS documento_titulo,
+                    d.""DESCRIPCION"" AS documento_descripcion,
+                    d.""ENLACE"" AS documento_enlace,
+                    d.""SECUENCIA"" AS documento_secuencia,
+                    d.""DATE_CREATED"" AS documento_date_created,
+                    d.""TIPO_DOCUMENTO"",
+                    d.""MAS_BUSCADOS"",
+                    d.""SECUENCIA_MAS_BUSCADA"",
+                    d.""DOCUMENTO_VER"",
+                    d.""INTERNO"",
+                    d.""FECHA_ACTUALIZACION"",
+                    d.""FECHA_INICIO"",
+                    d.""FECHA_FIN"",
+                    d.""DOCUMENTO_DESCARGA"",
+                    d.""NOMBRE_DOCUMENTO"",
+                    d.""TYPE"" AS documento_type
+                FROM categoria_documento c
+                LEFT JOIN documentos d ON c.""ID_CATEGORIA_DOCUMENTO"" = d.""ID_CATEGORIA_DOCUMENTO""
+                ORDER BY c.""SECUENCIA"", d.""SECUENCIA"";
+            ";
+
+            using NpgsqlCommand cmd = new NpgsqlCommand(query, connection);
+            
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var categoriaList = new List<CategoriaDocumentoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                var categoriaId = (int)reader["ID_CATEGORIA_DOCUMENTO"];
+                var categoria = categoriaList.FirstOrDefault(c => c.Id == categoriaId);
+
+                if (categoria == null)
+                {
+                    categoria = new CategoriaDocumentoDTO
+                    {
+                        Id = categoriaId,
+                        Status = reader["categoria_status"].ToString() ?? "",
+                        Nombre = reader["categoria_nombre"].ToString() ?? "",
+                        Descripcion = reader["categoria_descripcion"].ToString(),
+                        Imagen = reader["categoria_imagen"].ToString(),
+                        Secuencia = (int)reader["categoria_secuencia"],
+                        DateCreated = (DateTime)reader["categoria_date_created"],
+                        Documentos = new List<DocumentoDTO>()
+                    };
+                    categoriaList.Add(categoria);
+                }
+
+                categoria.Documentos.Add(new DocumentoDTO
+                {
+                    Id = (int)reader["ID_DOCUMENTO"],
+                    Status = reader["documento_status"].ToString() ?? "",
+                    Titulo = reader["documento_titulo"].ToString() ?? "",
+                    Descripcion = reader["documento_descripcion"].ToString(),
+                    Enlace = reader["documento_enlace"].ToString(),
+                    Secuencia = (int)reader["documento_secuencia"],
+                    DateCreated = (DateTime)reader["documento_date_created"],
+                    TipoDocumento = reader["TIPO_DOCUMENTO"].ToString(),
+                    MasBuscados = (bool)reader["MAS_BUSCADOS"],
+                    SecuenciaMasBuscada = reader["SECUENCIA_MAS_BUSCADA"] as int?,
+                    Documento = reader["DOCUMENTO_VER"].ToString(),
+                    Interno = (bool)reader["INTERNO"],
+                    FechaActualizacion = reader["FECHA_ACTUALIZACION"] as DateTime?,
+                    FechaInicio = (DateTime)reader["FECHA_INICIO"],
+                    FechaFin = (DateTime)reader["FECHA_FIN"],
+                    DocumentoDescarga = reader["DOCUMENTO_DESCARGA"].ToString(),
+                    NombreDocumento = reader["NOMBRE_DOCUMENTO"].ToString(),
+                    Type = reader["documento_type"].ToString()
+                });
+            }
+
+            return categoriaList;
+        }        
     }
 }
