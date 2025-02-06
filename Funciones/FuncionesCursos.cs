@@ -712,8 +712,8 @@ namespace APIPostulaEnrolamiento.Funciones
                 {
                     IdCalendario = (int)reader["id_calendario"],
                     Actividad = reader["actividad"].ToString() ?? "",
-                    FechaInicio = (DateTime)reader["fecha_inicio"],
-                    FechaFin = (DateTime)reader["fecha_fin"],
+                    FechaInicio = ((DateTime)reader["fecha_inicio"]).ToString("yyyy-MM-dd"),
+                    FechaFin = ((DateTime)reader["fecha_fin"]).ToString("yyyy-MM-dd"),
                     ModalidadEstudios = reader["modalidad_estudios"].ToString() ?? "",
                     TipoActividad = reader["tipo_actividad"].ToString() ?? ""
                 });
