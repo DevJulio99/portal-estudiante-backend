@@ -576,5 +576,29 @@ namespace MyPortalStudent.Services
             }
             return status;
         }
+
+        public async Task<Boolean> alumnoHabilitado(string? dniAlumno)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            Boolean existe = false;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"SELECT 1 FROM alumno 
+            WHERE dni = @dniAlum AND habilitado_prueba = true LIMIT 1", connection))
+            {
+                cmd.Parameters.AddWithValue("@dniAlum", dniAlumno);
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        existe = true;
+                    }
+                }
+            }
+
+            return existe;
+        }
     }
 }

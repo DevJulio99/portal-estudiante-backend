@@ -295,5 +295,25 @@ namespace MyPortalStudent.Controllers
                 return this.StatusCode(500, apiResult);
             }
         }
+
+        [HttpGet("alumno-habilitado")]
+        public async Task<ActionResult> AlumnoHabilitado(string dniAlumno)
+        {
+            var apiResult = new ApiResult<Object>();
+
+            try
+            {
+                var success = await _service.alumnoHabilitado(dniAlumno);
+                apiResult.Message = success ? "El alumno esta habilitado" : "El alumno no esta habilitado";
+                apiResult.Success = success;
+                return this.Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                apiResult.Success = false;
+                apiResult.Message = ex.Message;
+                return this.StatusCode(500, apiResult);
+            }
+        }
     }
 }

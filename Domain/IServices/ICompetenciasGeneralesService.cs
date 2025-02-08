@@ -18,5 +18,6 @@ namespace MyPortalStudent.Domain.IServices
         Task<List<ListaEstadoCompetenciaDTO>> listarEstadoCompetencia(int idPostulante, int? idCompetencia);
         Task<Boolean> registrarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto);
         Task<Boolean> actualizarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto);
+        Task<Boolean> alumnoHabilitado(string? dniAlumno);
     }
 }
