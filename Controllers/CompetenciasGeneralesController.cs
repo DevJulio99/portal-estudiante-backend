@@ -74,6 +74,7 @@ namespace MyPortalStudent.Controllers
             {
                 var listaExamen = await _service.listarExamen(idPostulante, idCompetencia);
                 apiResult.Message = string.Format(listaExamen.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
+                apiResult.Success = listaExamen.Count > 0;
                 apiResult.Data = listaExamen;
                 if(listaExamen.Count == 0){
                     return this.StatusCode(404, apiResult);

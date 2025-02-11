@@ -10,5 +10,7 @@ namespace MyPortalStudent.Domain.DTOs.CompetenciasGenerales
         public required int numeroPreguntas { get; set; }
         [Required(ErrorMessage = "Por favor, ingresa el Id de la competencia.")]
         public required int idCompetencia { get; set; }
+        public required int idGrado { get; set; }
+        public required Boolean esGrupal { get; set; }
     }
 }

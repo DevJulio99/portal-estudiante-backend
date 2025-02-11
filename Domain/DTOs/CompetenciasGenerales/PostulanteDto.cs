@@ -10,5 +10,6 @@ namespace MyPortalStudent.Domain.DTOs.CompetenciasGenerales
         public string? celular { get; set; }
         public int? codigoPostulante { get; set; }
         public Boolean estado { get; set; }
+        public int idGrado { get; set; }
     }
 }

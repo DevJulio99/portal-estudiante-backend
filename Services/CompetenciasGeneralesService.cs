@@ -21,6 +21,7 @@ namespace MyPortalStudent.Services
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             List<int> competenciasExistentes = new List<int>();
+            int rowAffected = 0;
 
             if (request.idPostulante.Equals(0) || request.numeroPreguntas.Equals(0) || request.idCompetencia.Equals(0))
             {
@@ -35,17 +36,33 @@ namespace MyPortalStudent.Services
               throw new Exception("El id de competencia no existe");
             }
             
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)){
+               connection.Open();
 
-            NpgsqlCommand cmd = new NpgsqlCommand("generar_examen_aleatorio_competencia", connection);
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("@p_id_postulante", request.idPostulante);
-            cmd.Parameters.AddWithValue("@p_numero_preguntas", request.numeroPreguntas);
-            cmd.Parameters.AddWithValue("@p_id_competencia", request.idCompetencia);
+               using(var cmd = new NpgsqlCommand("generar_examen_aleatorio_competencia_grado", connection)){
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@p_id_postulante", request.idPostulante);
+                cmd.Parameters.AddWithValue("@p_numero_preguntas", request.numeroPreguntas);
+                cmd.Parameters.AddWithValue("@p_id_competencia", request.idCompetencia);
+                cmd.Parameters.AddWithValue("@p_id_grado", request.idGrado);
+                cmd.Parameters.AddWithValue("@p_es_grupal", request.esGrupal);
 
-            connection.Open();
-            int rowAffected = cmd.ExecuteNonQuery();
-            connection.Close();
+                 try
+                 {
+                     rowAffected = cmd.ExecuteNonQuery();
+                 }
+                 catch (Exception ex)
+                 {
+                    
+                
+                 }
+                }
+                connection.Close();
+            }
+            
+
+            
+            
 
             return true;
         }
@@ -246,7 +263,11 @@ namespace MyPortalStudent.Services
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
 
             connection.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand($@"select * from postulante where ""DNI"" = '{dniPostulante}'", connection);
+            NpgsqlCommand cmd = new NpgsqlCommand($@"select p.""ID_POSTULANTE"", p.""DNI"", p.""NOMBRE"", p.""APELLIDO"",
+                                         p.""CORREO"", p.""CELULAR"", p.""ESTADO"", a.id_grado
+                                         from alumno a
+                                         inner join postulante p ON a.dni = p.""DNI""
+                                         where p.""DNI"" = '{dniPostulante}'", connection);
             using NpgsqlDataReader reader = cmd.ExecuteReader();
             var postulante = new List<PostulanteDTO>([]);
 
@@ -261,6 +282,7 @@ namespace MyPortalStudent.Services
                         celular = reader["CELULAR"].ToString() ?? "",
                         codigoPostulante = 0,
                         estado = (Boolean)reader["ESTADO"],
+                        idGrado = (int)reader["id_grado"],
                 });
             }
 
