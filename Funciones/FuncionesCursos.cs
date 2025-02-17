@@ -812,6 +812,85 @@ namespace APIPostulaEnrolamiento.Funciones
             }
 
             return categoriaList;
-        }        
+        }
+
+
+        public async Task<List<EventoDTO>> GetEventos()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using NpgsqlConnection connection = new(connectionString);
+            await connection.OpenAsync();
+
+            string query = "SELECT * FROM eventos";
+
+            using NpgsqlCommand cmd = new(query, connection);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+            List<EventoDTO> eventosList = new();
+
+            while (await reader.ReadAsync())
+            {
+                eventosList.Add(new EventoDTO
+                {
+                    Titulo = reader["TITULO"].ToString() ?? "",
+                    ImagenDesktop = reader["IMAGEN_DESKTOP"].ToString() ?? "",
+                    ImagenMobile = reader["IMAGEN_MOBILE"].ToString() ?? "",
+                    AltImagenDesktop = reader["ALT_IMAGEN_DESKTOP"] as string,
+                    AltImagenMobile = reader["ALT_IMAGEN_MOBILE"] as string,
+                    Url = reader["URL"] as string,
+                    Prioridad = reader["PRIORIDAD"].ToString() ?? "1",
+                    AbrirNuevaPagina = reader["ABRIR_NUEVA_PAGINA"] != DBNull.Value && (bool)reader["ABRIR_NUEVA_PAGINA"],
+                    TipoDeEvento = reader["TIPO_DE_EVENTO"].ToString() ?? "",
+                    CategoriaEvento = reader["CATEGORIA_EVENTO"].ToString() ?? "",
+                    FechaDeInicio = reader["FECHA_DE_INICIO"] != DBNull.Value ? ((DateTime)reader["FECHA_DE_INICIO"]).ToString("yyyy-MM-dd") : "",
+                    HoraDeInicio = reader["HORA_DE_INICIO"] != DBNull.Value ? ((TimeSpan)reader["HORA_DE_INICIO"]).ToString(@"hh\:mm\:ss") : "",
+                    FechaDeFin = reader["FECHA_DE_FIN"] != DBNull.Value ? ((DateTime)reader["FECHA_DE_FIN"]).ToString("yyyy-MM-dd") : "",
+                    HoraDeFin = reader["HORA_DE_FIN"] != DBNull.Value ? ((TimeSpan)reader["HORA_DE_FIN"]).ToString(@"hh\:mm\:ss") : "",
+                    FechaInicioEvento = reader["FECHA_INICIO_EVENTO"] != DBNull.Value ? ((DateTime)reader["FECHA_INICIO_EVENTO"]).ToString("yyyy-MM-dd") : "",
+                    HoraInicioEvento = reader["HORA_INICIO_EVENTO"] != DBNull.Value ? ((TimeSpan)reader["HORA_INICIO_EVENTO"]).ToString(@"hh\:mm\:ss") : "",
+                    FechaFinEvento = reader["FECHA_FIN_EVENTO"] != DBNull.Value ? ((DateTime)reader["FECHA_FIN_EVENTO"]).ToString("yyyy-MM-dd") : "",
+                    NombreBoton = reader["NOMBRE_BOTON"] as string,
+                    Descripcion = reader["DESCRIPCION"].ToString() ?? "",
+                    Id = (int)reader["ID_EVENTO"],
+                    Capacidad = reader["CAPACIDAD"].ToString() ?? "0",
+                    Ubicacion = await GetUbicacionesEvento((int)reader["ID_EVENTO"])
+                });
+            }
+
+            return eventosList;
+        }
+
+        public async Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using NpgsqlConnection connection = new(connectionString);
+            await connection.OpenAsync();
+
+            string query = "SELECT * FROM ubicaciones_evento WHERE \"EVENTO_ID\" = @eventoId";
+
+            using NpgsqlCommand cmd = new(query, connection);
+            cmd.Parameters.AddWithValue("eventoId", eventoId);
+
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+            List<UbicacionEventoDTO> ubicaciones = new();
+
+            while (await reader.ReadAsync())
+            {
+                ubicaciones.Add(new UbicacionEventoDTO
+                {
+                    Latitud = reader["LATITUD"].ToString() ?? "",
+                    Longitud = reader["LONGITUD"].ToString() ?? "",
+                    Direccion = reader["DIRECCION"].ToString() ?? "",
+                    Nombre = reader["NOMBRE"].ToString() ?? "",
+                    Url = reader["URL"] as string,
+                    UrlMobile = reader["URL_MOBILE"] as string
+                });
+            }
+
+            return ubicaciones;
+        }
     }
 }

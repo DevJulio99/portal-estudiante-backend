@@ -15,6 +15,7 @@ public interface IFuncionesApi
         Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio);
         Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio);
         Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria();
-
+        Task<List<EventoDTO>> GetEventos();
+        Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId);
     }
 }

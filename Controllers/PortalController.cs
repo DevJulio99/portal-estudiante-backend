@@ -390,5 +390,35 @@ namespace MyPortalStudent.Controllers
                 }
             }
         }
+
+        [HttpGet("ObtenerEventos")]
+        public async Task<IActionResult> ObtenerEventos()
+        {
+            try
+            {
+                var eventos = await _funcionesApi.GetEventos();
+
+                if (eventos == null || eventos.Count == 0)
+                {
+                    return NotFound($"No se encontraron eventos.");
+                }
+
+                var apiResult = new { Success = true, eventos.Count, Data = eventos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
+
     }
 }
