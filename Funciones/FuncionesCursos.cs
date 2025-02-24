@@ -892,5 +892,55 @@ namespace APIPostulaEnrolamiento.Funciones
 
             return ubicaciones;
         }
+
+        public async Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            
+            using NpgsqlConnection connection = new(connectionString);
+            await connection.OpenAsync();
+            
+            string query = "SELECT * FROM obtener_obligaciones_pagadas_por_alumno(@idAlumnoParam)";
+            
+            using NpgsqlCommand cmd = new(query, connection);
+            cmd.Parameters.AddWithValue("idAlumnoParam", idAlumno);
+            
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var obligacionesPagadas = new List<ObligacionPagadaDTO>();
+            
+            while (await reader.ReadAsync())
+            {
+                obligacionesPagadas.Add(new ObligacionPagadaDTO
+                {
+                    Periodo = reader["periodo"].ToString() ?? "",
+                    FechaPago = reader["fecha_pago"] != DBNull.Value ? ((DateTime)reader["fecha_pago"]).ToString("dd/MM/yyyy") : "",
+                    Concepto = reader["concepto"].ToString() ?? "",
+                    NumeroDocumentoPago = reader["numero_documento_pago"].ToString() ?? "",
+                    NumeroCuota = reader["numero_cuota"] != DBNull.Value ? (int)reader["numero_cuota"] : 0,
+                    Importe = reader["importe"] != DBNull.Value ? (decimal)reader["importe"] : 0,
+                    MontoPagado = reader["monto_pagado"] != DBNull.Value ? (decimal)reader["monto_pagado"] : 0
+                });
+            }
+
+            // Agrupar por periodo
+            var obligacionesPorPeriodo = obligacionesPagadas
+                .GroupBy(o => o.Periodo)
+                .Select(g => new ObligacionPorPeriodoDTO
+                {
+                    Periodo = g.Key,
+                    Pagos = g.Select(o => new ObligacionPagadaDTO
+                    {
+                        FechaPago = o.FechaPago,
+                        Concepto = o.Concepto,
+                        NumeroDocumentoPago = o.NumeroDocumentoPago,
+                        NumeroCuota = o.NumeroCuota,
+                        Importe = o.Importe,
+                        MontoPagado = o.MontoPagado
+                    }).ToList()
+                }).ToList();
+
+            return obligacionesPorPeriodo;
+        }
     }
 }

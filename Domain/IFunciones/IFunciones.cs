@@ -17,5 +17,6 @@ public interface IFuncionesApi
         Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria();
         Task<List<EventoDTO>> GetEventos();
         Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId);
+        Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno);
     }
 }

@@ -419,6 +419,34 @@ namespace MyPortalStudent.Controllers
                 return StatusCode(500, ex);
             }
         }
+    
+        [HttpGet("ObtenerObligacionesPagadas/{idAlumno}")]
+        public async Task<IActionResult> ObtenerObligacionesPagadas(int idAlumno)
+        {
+            try
+            {
+                var obligaciones = await _funcionesApi.GetObligacionesPagadas(idAlumno);
 
+                if (obligaciones == null || obligaciones.Count == 0)
+                {
+                    return NotFound($"No se encontraron obligaciones pagadas para el alumno con ID {idAlumno}.");
+                }
+
+                var apiResult = new { Success = true, obligaciones.Count, Data = obligaciones };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
     }
 }
