@@ -179,6 +179,7 @@ namespace MyPortalStudent.Services
                     idEtapa = reader["ID_ETAPA"].ToString() ?? "",
                     idProceso = reader["ID_PROCESO"].ToString() ?? "",
                     tiempoLimite = reader["TIEMPO_LIMITE"].ToString() ?? "",
+                    urlImagen = reader["URL_IMAGEN"].ToString() ?? "",
                 });
             }
 

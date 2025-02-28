@@ -17,5 +17,6 @@
         public string idEtapa { get; set; }
         public string idProceso { get; set; }
         public string tiempoLimite { get; set; }
+        public string urlImagen { get; set; }
     }
 }
