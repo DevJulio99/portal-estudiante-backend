@@ -27,12 +27,9 @@ namespace MyPortalStudent.Services
             {
                 throw new Exception((request.idPostulante.Equals(0) ? "idPostulante" : request.numeroPreguntas.Equals(0) ? "numeroPreguntas" : "idCompetencia") + " no puede ser 0.");
             }
-            var competencias = await listarCompetencias();
-            foreach (var competencia in competencias) {
-               competenciasExistentes.Add(competencia.id_compentencia);
-            }
-
-            if(!competenciasExistentes.Exists(x => x == request.idCompetencia)){
+            var existeCompetencia_ = await existeCompetencia(request.idCompetencia);
+            
+            if(!existeCompetencia_){
               throw new Exception("El id de competencia no existe");
             }
             
@@ -149,7 +146,7 @@ namespace MyPortalStudent.Services
             return listaExamen;
         }
 
-        public async Task<List<CompetenciaDTO>> listarCompetencias()
+        public async Task<List<CompetenciaDTO>> listarCompetencias(int idPostulante)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
 
@@ -162,9 +159,11 @@ namespace MyPortalStudent.Services
 
             while (reader.Read())
             {
+                var idCompetencia = Int32.Parse(reader["ID_COMPETENCIA"].ToString() ?? "0");
+                var finalizado = await competenciaTerminada(idCompetencia, idPostulante);
                 competencias.Add(new CompetenciaDTO
                 {
-                    id_compentencia = Int32.Parse(reader["ID_COMPETENCIA"].ToString() ?? ""),
+                    id_compentencia = idCompetencia,
                     nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
                     pesoCompetencia = reader["PESO_COMPETENCIA"].ToString() ?? "",
                     descripcion = reader["DESCRIPCION"].ToString() ?? "",
@@ -180,6 +179,7 @@ namespace MyPortalStudent.Services
                     idProceso = reader["ID_PROCESO"].ToString() ?? "",
                     tiempoLimite = reader["TIEMPO_LIMITE"].ToString() ?? "",
                     urlImagen = reader["URL_IMAGEN"].ToString() ?? "",
+                    finalizado = finalizado
                 });
             }
 
@@ -612,6 +612,56 @@ namespace MyPortalStudent.Services
             WHERE dni = @dniAlum AND habilitado_prueba = true LIMIT 1", connection))
             {
                 cmd.Parameters.AddWithValue("@dniAlum", dniAlumno);
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        existe = true;
+                    }
+                }
+            }
+
+            return existe;
+        }
+
+        public async Task<Boolean> existeCompetencia(int? idCompetencia)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            Boolean existe = false;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from competencia
+                   where ""ID_COMPETENCIA"" = @idCompetencia", connection))
+            {
+                cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        existe = true;
+                    }
+                }
+            }
+
+            return existe;
+        }
+
+         public async Task<Boolean> competenciaTerminada(int? idCompetencia, int idPostulante)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            Boolean existe = false;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from estado_competencia
+                  where ""ID_COMPETENCIA"" = @idCompetencia AND ""ID_POSTULANTE"" = @idPostulante
+                  AND ""ESTADO"" = 'F'", connection))
+            {                  
+                cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
+                cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
                 using (NpgsqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())

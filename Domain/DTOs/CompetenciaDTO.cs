@@ -18,5 +18,6 @@
         public string idProceso { get; set; }
         public string tiempoLimite { get; set; }
         public string urlImagen { get; set; }
+        public Boolean finalizado { get; set; }
     }
 }

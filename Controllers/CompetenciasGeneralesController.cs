@@ -90,12 +90,12 @@ namespace MyPortalStudent.Controllers
         }
 
         [HttpGet("competencias")]
-        public async Task<ActionResult> getCompetencias()
+        public async Task<ActionResult> getCompetencias(int idPostulante)
         {
             var apiResult = new ApiResult<Object>();
             try
             {
-                var listaCompetencia = await _service.listarCompetencias();
+                var listaCompetencia = await _service.listarCompetencias(idPostulante);
                 apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
                 apiResult.Data = listaCompetencia;
                 return this.Ok(apiResult);

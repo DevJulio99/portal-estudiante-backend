@@ -7,7 +7,7 @@ namespace MyPortalStudent.Domain.IServices
         // Task UploadFile(CompetenciasGeneralesUploadFileDTO uploadFileDTO);
         Task<Boolean> ExamenAleatorio(GenerarExamenDTO request);
         Task<List<ExamenDTO>> listarExamen(int idPostulante, int idCompetencia);
-        Task<List<CompetenciaDTO>> listarCompetencias();
+        Task<List<CompetenciaDTO>> listarCompetencias(int idPostulante);
         Task<Boolean> ActualizarRespuesta(RespuestaReq request);
         Task<Boolean> CompetenciaCompleta(int idPostulante, int idCompetencia);
         Task<Boolean> registrarPostulante(RegistrarPostulanteDTO postulanteDto);
