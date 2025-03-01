@@ -42,7 +42,6 @@ namespace MyPortalStudent.Services
                 cmd.Parameters.AddWithValue("@p_numero_preguntas", request.numeroPreguntas);
                 cmd.Parameters.AddWithValue("@p_id_competencia", request.idCompetencia);
                 cmd.Parameters.AddWithValue("@p_id_grado", request.idGrado);
-                cmd.Parameters.AddWithValue("@p_es_grupal", request.esGrupal);
 
                  try
                  {
@@ -153,7 +152,7 @@ namespace MyPortalStudent.Services
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand(@"SELECT cp.*, ct.""TIEMPO_LIMITE"" FROM competencia cp inner join criterio_evaluacion ct USING(""ID_COMPETENCIA"") order by ""ID_COMPETENCIA""", connection);
+            using NpgsqlCommand cmd = new NpgsqlCommand(@"SELECT cp.*, ct.""TIEMPO_LIMITE"", ct.""NUMERO_PREGUNTAS"" FROM competencia cp inner join criterio_evaluacion ct USING(""ID_COMPETENCIA"") order by ""ID_COMPETENCIA""", connection);
             using NpgsqlDataReader reader = cmd.ExecuteReader();
             var competencias = new List<CompetenciaDTO>([]);
 
@@ -166,6 +165,7 @@ namespace MyPortalStudent.Services
                     id_compentencia = idCompetencia,
                     nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
                     pesoCompetencia = reader["PESO_COMPETENCIA"].ToString() ?? "",
+                    numeroPreguntas = Int32.Parse(reader["NUMERO_PREGUNTAS"].ToString() ?? "0"),
                     descripcion = reader["DESCRIPCION"].ToString() ?? "",
                     fechaDisponibilidad = reader["FECHA_DISPONIBILIDAD"].ToString() ?? "",
                     fechaInicio = reader["FECHA_INICIO"].ToString() ?? "",
