@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-MyPortalStudent-53e229de-6dd0-4274-a0b9-fc0f3cf0126c</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Deshabilitar HTTPS en despliegue -->
+    <ASPNETCORE_URLS>http://*:$PORT</ASPNETCORE_URLS>
   </PropertyGroup>
 
   <ItemGroup>
