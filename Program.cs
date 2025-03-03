@@ -1,6 +1,7 @@
 using APIPostulaEnrolamiento.Funciones;
 using JwtLoginService;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
 using MyPortalStudent.Domain.IServices;
