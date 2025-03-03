@@ -3,12 +3,11 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Copiar los archivos del proyecto y restaurar dependencias
-COPY ["MyPortalStudent/MyPortalStudent.csproj", "MyPortalStudent/"]
-RUN dotnet restore "MyPortalStudent/MyPortalStudent.csproj"
+COPY ["MyPortalStudent.csproj", "."]
+RUN dotnet restore "MyPortalStudent.csproj"
 
 # Copiar todo el código fuente y compilar en modo Release
 COPY . .
-WORKDIR "/app/MyPortalStudent"
 RUN dotnet build "MyPortalStudent.csproj" -c Release -o /app/build
 
 # Publicar la aplicación
