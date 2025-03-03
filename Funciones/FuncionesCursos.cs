@@ -451,8 +451,8 @@ namespace APIPostulaEnrolamiento.Funciones
             {
                 var fechaActual = DateTime.Now;
                 var fechaActualTiempo = fechaActual.Ticks;
-                var fechaIniciotiempo = DateTime.ParseExact(reader["fecha_inicio"].ToString(), "d/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                var fechaFintiempo = DateTime.ParseExact(reader["fecha_fin"].ToString(), "d/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var fechaIniciotiempo = DateTime.ParseExact(reader["fecha_inicio"].ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var fechaFintiempo = DateTime.ParseExact(reader["fecha_fin"].ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
                 var actualBimestre = fechaActualTiempo >= fechaIniciotiempo.Ticks && fechaActualTiempo <= fechaFintiempo.Ticks;
 
                 if(actualBimestre){
