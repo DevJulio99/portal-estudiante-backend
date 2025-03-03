@@ -8,6 +8,10 @@ using MyPortalStudent.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddHostedService<Worker>();
+// Configurar el puerto para Railway
+builder.WebHost.ConfigureKestrel(serverOptions => {
+    serverOptions.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080"));
+});
 
 builder.Services.AddCors(opciones =>
 {
@@ -49,6 +53,10 @@ app.UseCors("validarConsumo");
 app.UseSwagger();
 app.UseSwaggerUI();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts(); // Solo en producción
+}
 app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();
