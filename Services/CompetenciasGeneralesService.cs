@@ -194,10 +194,10 @@ namespace MyPortalStudent.Services
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)){
                 connection.Open();
                 using (NpgsqlCommand cmd = new NpgsqlCommand(@"select c.""ID_COMPETENCIA"",c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
-                                    c.""URL_IMAGEN""
-                                    from estado_competencia
+                                    c.""URL_IMAGEN"", ec.""TIEMPO_FINALIZADO""
+                                    from estado_competencia ec
                                     inner join competencia c USING(""ID_COMPETENCIA"")
-                                    where ""ID_POSTULANTE"" = @idPostulante AND ""ESTADO"" = 'F'", connection)){
+                                    where ""ID_POSTULANTE"" = @idPostulante AND ec.""ESTADO"" = 'F'", connection)){
  
                     cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader()){
@@ -209,6 +209,7 @@ namespace MyPortalStudent.Services
                                nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
                                descripcion = reader["DESCRIPCION"].ToString() ?? "",
                                urlImagen = reader["URL_IMAGEN"].ToString() ?? "",
+                               tiempoFinalizado = reader["TIEMPO_FINALIZADO"].ToString() ?? ""
                            });
                        }
                     }
@@ -823,6 +824,13 @@ namespace MyPortalStudent.Services
                 {
 
                     preguntas = listaPreguntas,
+                    competencia = new CompetenciaResultadoDTO{
+                      id_compentencia = competencia.idCompetencia,
+                      nombreCompetencia = competencia.nombreCompetencia,
+                      descripcion = competencia.descripcion,
+                      puntajeMinimoAprobatorio = competencia.puntajeMinimoAprobatorio,
+                      puntajePregunta = competencia.puntajePorPregunta,
+                    },
                     totalPreguntas = total,
                     correctas = correctos,
                     incorrectas = incorrectos,
