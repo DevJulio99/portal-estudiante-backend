@@ -8,6 +8,7 @@ namespace MyPortalStudent.Domain.IServices
         Task<Boolean> ExamenAleatorio(GenerarExamenDTO request);
         Task<List<ExamenDTO>> listarExamen(int idPostulante, int idCompetencia);
         Task<List<CompetenciaDTO>> listarCompetencias(int idPostulante);
+        Task<List<BaseCompetenciaDTO>> listarCompetenciasFinalizadas(int idPostulante);
         Task<Boolean> ActualizarRespuesta(RespuestaReq request);
         Task<Boolean> CompetenciaCompleta(int idPostulante, int idCompetencia);
         Task<Boolean> registrarPostulante(RegistrarPostulanteDTO postulanteDto);
@@ -19,5 +20,6 @@ namespace MyPortalStudent.Domain.IServices
         Task<Boolean> registrarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto);
         Task<Boolean> actualizarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto);
         Task<Boolean> alumnoHabilitado(string? dniAlumno);
+        Task<List<ResultadoEvaluacionDTO>> resultadoCompetencia(int idPostulante, int idCompetencia);
     }
 }

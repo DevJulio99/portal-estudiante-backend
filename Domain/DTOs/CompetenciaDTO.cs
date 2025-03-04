@@ -1,13 +1,9 @@
 ﻿namespace MyPortalStudent.Domain
 {
-    public class CompetenciaDTO
+    public class CompetenciaDTO : BaseCompetenciaDTO
     {
-        public int id_compentencia { get; set; }
-        public string nombreCompetencia { get; set; }
-
         public string pesoCompetencia { get; set; }
         public int numeroPreguntas { get; set;}
-        public string descripcion { get; set; }
         public string fechaDisponibilidad { get; set; }
         public string fechaInicio { get; set; }
         public string fechaFin { get; set; }

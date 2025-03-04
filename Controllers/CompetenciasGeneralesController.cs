@@ -98,6 +98,33 @@ namespace MyPortalStudent.Controllers
                 var listaCompetencia = await _service.listarCompetencias(idPostulante);
                 apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
                 apiResult.Data = listaCompetencia;
+                apiResult.Success = listaCompetencia.Count > 0;
+                if(listaCompetencia.Count == 0){
+                    return this.StatusCode(404, apiResult);
+                }
+                return this.Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                apiResult.Success = false;
+                apiResult.Message = ex.Message;
+                return this.StatusCode(500, apiResult);
+            }
+        }
+
+        [HttpGet("competencias-finalizadas")]
+        public async Task<ActionResult> getCompetenciasFinalizadas(int idPostulante)
+        {
+            var apiResult = new ApiResult<Object>();
+            try
+            {
+                var listaCompetencia = await _service.listarCompetenciasFinalizadas(idPostulante);
+                apiResult.Success = listaCompetencia.Count > 0;
+                apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
+                apiResult.Data = listaCompetencia;
+                if(listaCompetencia.Count == 0){
+                    return this.StatusCode(404, apiResult);
+                }
                 return this.Ok(apiResult);
             }
             catch (Exception ex)
@@ -307,6 +334,30 @@ namespace MyPortalStudent.Controllers
                 var success = await _service.alumnoHabilitado(dniAlumno);
                 apiResult.Message = success ? "El alumno esta habilitado" : "El alumno no esta habilitado";
                 apiResult.Success = success;
+                return this.Ok(apiResult);
+            }
+            catch (Exception ex)
+            {
+                apiResult.Success = false;
+                apiResult.Message = ex.Message;
+                return this.StatusCode(500, apiResult);
+            }
+        }
+
+        [HttpGet("resultado-competencia")]
+        public async Task<ActionResult> resultadoCompetencia(int idPostulante, int idCompetencia)
+        {
+            var apiResult = new ApiResult<Object>();
+
+            try
+            {
+                var lista = await _service.resultadoCompetencia(idPostulante, idCompetencia);
+                apiResult.Message = lista.Count > 0 ? "Se encontraron resultados." : "No se encontraron resultados.";
+                apiResult.Success = lista.Count > 0;
+                apiResult.Data = lista;
+                if(lista.Count == 0){
+                    return this.StatusCode(404, apiResult);
+                }
                 return this.Ok(apiResult);
             }
             catch (Exception ex)
