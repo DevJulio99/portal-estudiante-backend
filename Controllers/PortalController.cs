@@ -40,12 +40,12 @@ namespace MyPortalStudent.Controllers
             }
         }
 
-        [HttpGet("AlumnosxId/{idAlum}")]
-        public async Task<ActionResult> GetAlumnosId(int idAlum)
+        [HttpGet("AlumnosxId/{numDocUsuario}")]
+        public async Task<ActionResult> GetAlumnosId(string? numDocUsuario)
         {
             try
             {
-                var data = await _funcionesApi.getAlumnosId(idAlum);
+                var data = await _funcionesApi.getAlumnosId(numDocUsuario);
                 var apiResult = new ApiResponse<List<PerfilDTO>> { Success = true, Message = "Se encontro alumno", Data = data };
                 if (data.Count == 0)
                 {
@@ -433,6 +433,58 @@ namespace MyPortalStudent.Controllers
                 }
 
                 var apiResult = new { Success = true, obligaciones.Count, Data = obligaciones };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
+
+        [HttpPost("registrar-imagen-pago")]
+        public async Task<IActionResult> RegistrarImagenPago(ImagenPagoDto imagenPagoDto)
+        {
+            try
+            {
+                var status = await _funcionesApi.setImagenPago(imagenPagoDto);
+                var apiResult = new { Success = status,Message = "Se registro imagen", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
+
+        [HttpGet("listar-pago-sede/{codigoSede}")]
+        public async Task<IActionResult> ListarPagosPorSede(string codigoSede)
+        {
+            try
+            {
+                var pagos = await _funcionesApi.getPagosPorSede(codigoSede);
+
+                if (pagos == null || pagos.Count == 0)
+                {
+                    return NotFound($"No se encontraron pagos para la sede ingresada.");
+                }
+
+                var apiResult = new { Success = true, pagos.Count, Data = pagos };
                 return Ok(apiResult);
             }
             catch (UnauthorizedAccessException ex)

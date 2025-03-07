@@ -55,16 +55,44 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaAlumnos;
         }
 
-        public async Task<List<PerfilDTO>> getAlumnosId(int idAlum)
+        public async Task<Boolean> existeAlumno(string? numDocUsuario)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            Boolean existe = false;
+
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($"select * from alumno where id_alumno = {idAlum}", connection);
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from alumno
+                   where dni = @dni", connection))
+            {
+                cmd.Parameters.AddWithValue("@dni", numDocUsuario);
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        existe = true;
+                    }
+                }
+            }
+
+            return existe;
+        }
+
+        public async Task<List<PerfilDTO>> getAlumnosId(string? numDocUsuario)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaAlumnos = new List<PerfilDTO>([]);
+            var existeAlumno_ = await existeAlumno(numDocUsuario);
+
+            if(existeAlumno_){
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($"select * from alumno where dni = @numDocUsuario", connection);
+            cmd.Parameters.AddWithValue("@numDocUsuario", numDocUsuario);
 
             using NpgsqlDataReader reader = cmd.ExecuteReader();
-            var listaAlumnos = new List<PerfilDTO>([]);
 
             while (reader.Read())
             {
@@ -145,23 +173,90 @@ namespace APIPostulaEnrolamiento.Funciones
                     autorizaAdicionales = false,
                     autorizaAlumni = false,
                     autorizaDatosPersonales = false
-                    // id_alumno = (int)reader["id_alumno"],
-                    // codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
-                    // nombre = reader["nombre"].ToString() ?? "",
-                    // apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
-                    // apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
-                    // dni = reader["dni"].ToString() ?? "",
-                    // correo = reader["correo"].ToString() ?? "",
-                    // fechaNacimiento = reader["fecha_nacimiento"].ToString() ?? "",
-                    // telefono = reader["telefono"].ToString() ?? "",
-                    // direccion = reader["direccion"].ToString() ?? "",
-                    // fotoPerfil = reader["foto_perfil"].ToString() ?? "",
-                    // genero = reader["genero"].ToString() ?? "",
-                    // tipoAlumno = reader["tipo_alumno"].ToString() ?? "",
-                    // observaciones = reader["observaciones"].ToString() ?? "",
-                    // apoderado = reader["apoderado"].ToString() ?? "",
                 });
             }
+            }else {
+                listaAlumnos.Add(new PerfilDTO
+                {
+                    idBanner = "",
+                    pidm = "",
+                    codLineaNegocio = "",
+                    codAlumno = "",
+                    codPersona = "",
+                    codUsuario = "",
+                    codSede = "",
+                    apePatImag = "",
+                    apeMatImag = "",
+                    nombresImag = "",
+                    tipoDocumento = "",
+                    documenIdentida = "",
+                    codModalidadEstActual = "",
+                    codPeriodoActual = "",
+                    codPeriodoBanner = "",
+                    codPeriodoBannerCatalogo = "",
+                    codProductoActual = "",
+                    codPrograma = "",
+                    codNivel = "",
+                    desNivel = "",
+                    codCampus = "",
+                    desCampus = "",
+                    codEstadoAlumno = "",
+                    desEstadoAlumno = "",
+                    codTipoAlumno = "",
+                    desTipoAlumno = "",
+                    codTipoAprendizaje = "",
+                    desTipoAprendizaje = "",
+                    codTipoIngreso = "",
+                    desTipoIngreso = "",
+                    desProducto = "",
+                    desPrograma = "",
+                    usuarioEmail = "",
+                    facultad = "",
+                    facultadId = "",
+                    fotoUrl = "",//reader["foto_perfil"].ToString() ?? "",
+                    fechaNacimiento = "",
+                    sexo = "",
+                    telefono = "",
+                    celular = "",
+                    ciudad = "",
+                    direccion = "",
+                    egresado = "",
+                    ciclo = "",
+                    fullName = "otro usuarip",
+                    tipoPersona = "",
+                    codTipoUsuario = "",
+                    correoPersonal = "",
+                    cicloIngreso = "",
+                    fotoUrlLow = "",
+                    urbanizacion = "",
+                    departamento = "",
+                    distrito = "",
+                    contactoDeEmergenciaNombre = "",
+                    contactoDeEmergenciaApellido = "",
+                    contactoDeEmergenciaCelular = "",
+                    situacionLaboral = "",
+                    tipoDeEmpleo = "",
+                    modalidadEmpleo = "",
+                    empresa = "",
+                    ruc = "",
+                    direccionEmpresa = "",
+                    cargo = "",
+                    enlaceLinkedin = "",
+                    infoJefeNombre = "",
+                    infoJefeCargo = "",
+                    infoJefeCorreo = "",
+                    infoJefeTelefono = "",
+                    zipCode = "",
+                    status = "",
+                    presentationLetterStatusId = "",
+                    phoneHome = "",
+                    autorizaAdicionales = false,
+                    autorizaAlumni = false,
+                    autorizaDatosPersonales = false
+                });
+            }
+
+            
 
             return listaAlumnos;
         }
@@ -691,6 +786,43 @@ namespace APIPostulaEnrolamiento.Funciones
             return pagosList;
         }
 
+         public async Task<List<PagoDTO>> getPagosPorSede(string codigoSede)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT id_pago, documento_pago, f_vencimiento,
+            ciclo, saldo, mora, total_a_pagar, detalle, imagen, anio
+             FROM pagos where codigo_sede = @codSede", connection);
+            cmd.Parameters.AddWithValue("@codSede", codigoSede);
+
+
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var pagosList = new List<PagoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                pagosList.Add(new PagoDTO
+                {
+                    IdPago = (int)reader["id_pago"],
+                    DocumentoPago = reader["documento_pago"].ToString() ?? "",
+                    FechaVencimiento = (DateTime)reader["f_vencimiento"],
+                    Ciclo = reader["ciclo"].ToString() ?? "",
+                    Saldo = (decimal)reader["saldo"],
+                    Mora = (decimal)reader["mora"],
+                    TotalAPagar = (decimal)reader["total_a_pagar"],
+                    Detalle = reader["detalle"].ToString() ?? "",
+                    Imagen = reader["imagen"].ToString() ?? "",
+                    Anio = (int)reader["anio"]
+                });
+            }
+
+            return pagosList;
+        }
+
         public async Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
@@ -941,6 +1073,36 @@ namespace APIPostulaEnrolamiento.Funciones
                 }).ToList();
 
             return obligacionesPorPeriodo;
+        }
+
+        public async Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var status = false;
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+              connection.Open();
+
+              string dml = $@"UPDATE pagos SET imagen = @imagen WHERE id_pago = @idPago";
+
+              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
+              {
+                  cmd.Parameters.AddWithValue("@idPago", imagenPagoDto.idPago);
+                  cmd.Parameters.AddWithValue("@imagen", imagenPagoDto.imagen);
+                  try
+                  {
+                      var result = cmd.ExecuteNonQuery();
+                      status = true;
+                  }
+                  catch (Exception ex)
+                  {
+                     throw new Exception("error al actualizar");
+                  }
+              }
+            }
+
+            return status;
         }
     }
 }

@@ -2,7 +2,7 @@ namespace MyPortalStudent.Domain.Ifunciones {
 public interface IFuncionesApi
     {
         Task<List<AlumnoDTO>> getAlumnos();
-        Task<List<PerfilDTO>> getAlumnosId(int idAlum);
+        Task<List<PerfilDTO>> getAlumnosId(string? numDocUsuario);
         Task<List<HorarioResponse>> getHorarioId(int idAlum, string fechaInicio, string fechaFin);
 
         Task<List<CursoDTO>> getCursos(int idAlum);
@@ -18,5 +18,7 @@ public interface IFuncionesApi
         Task<List<EventoDTO>> GetEventos();
         Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId);
         Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno);
+        Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto);
+        Task<List<PagoDTO>> getPagosPorSede(string codigoSede);
     }
 }
