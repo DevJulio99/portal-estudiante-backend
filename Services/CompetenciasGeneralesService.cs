@@ -186,6 +186,39 @@ namespace MyPortalStudent.Services
             return competencias;
         }
 
+        public async Task<List<BaseCompetenciaDTO>> listarCompetenciasFinalizadas(int idPostulante)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var competencias = new List<BaseCompetenciaDTO>([]);
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)){
+                connection.Open();
+                using (NpgsqlCommand cmd = new NpgsqlCommand(@"select c.""ID_COMPETENCIA"",c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
+                                    c.""URL_IMAGEN"", ec.""TIEMPO_FINALIZADO""
+                                    from estado_competencia ec
+                                    inner join competencia c USING(""ID_COMPETENCIA"")
+                                    where ""ID_POSTULANTE"" = @idPostulante AND ec.""ESTADO"" = 'F'", connection)){
+ 
+                    cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader()){
+                       while (reader.Read())
+                       {
+                           competencias.Add(new BaseCompetenciaDTO()
+                           {
+                               id_compentencia = Int32.Parse(reader["ID_COMPETENCIA"].ToString() ?? "0"),
+                               nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
+                               descripcion = reader["DESCRIPCION"].ToString() ?? "",
+                               urlImagen = reader["URL_IMAGEN"].ToString() ?? "",
+                               tiempoFinalizado = reader["TIEMPO_FINALIZADO"].ToString() ?? ""
+                           });
+                       }
+                    }
+                }
+            }
+             
+            return competencias;
+        }
+
         public async Task<Boolean> ActualizarRespuesta(RespuestaReq request)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
@@ -672,6 +705,141 @@ namespace MyPortalStudent.Services
             }
 
             return existe;
+        }
+
+        public async Task<List<ResultadoCompetenciaDTO>> listaResultadoCompetencias(int idCompetencia)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            List<ResultadoCompetenciaDTO> lista = new List<ResultadoCompetenciaDTO>();
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select c.""ID_COMPETENCIA"", c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
+                cr.""PUNTAJE_MINIMO_APROBATORIO"", cr.""PUNTAJE_POR_PREGUNTA"",
+                cr.""PESO"" from competencia c
+                INNER JOIN criterio_evaluacion cr USING(""ID_COMPETENCIA"")
+                WHERE ""ID_COMPETENCIA"" = @idCompetencia", connection))
+                {
+                    cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lista.Add(new ResultadoCompetenciaDTO
+                            {
+                                idCompetencia = (int)reader["ID_COMPETENCIA"],
+                                nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
+                                descripcion = reader["DESCRIPCION"].ToString() ?? "",
+                                puntajeMinimoAprobatorio = (Decimal)reader["PUNTAJE_MINIMO_APROBATORIO"],
+                                puntajePorPregunta = (Decimal)reader["PUNTAJE_POR_PREGUNTA"],
+                                peso = (Decimal)reader["PESO"],
+                            });
+                        }
+                    }
+
+                }
+            }
+
+
+            return lista;
+        }
+
+        public async Task<List<ResultadoPreguntaDTO>> listaResultadoPreguntas(int idPostulante, int idCompetencia)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            string total = "0";
+            List<ResultadoPreguntaDTO> lista = new List<ResultadoPreguntaDTO>();
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select e.""ID_PREGUNTA"",e.""ORDEN_PREGUNTA"", 
+                CASE WHEN e.""RESPUESTA_SELECCIONADA"" = p.""RESPUESTA_CORRECTA"" THEN 1
+                WHEN e.""RESPUESTA_SELECCIONADA"" <> p.""RESPUESTA_CORRECTA"" THEN 2
+                ELSE 0 END as ""ESTADO"" from examen_generado e
+                inner join pregunta p USING(""ID_PREGUNTA"")
+                where e.""ID_POSTULANTE"" = @idPostulante and e.""ID_COMPETENCIA"" = @idCompetencia ORDER BY e.""ORDEN_PREGUNTA""", connection))
+                {
+                    cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
+                    cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
+
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            lista.Add(new ResultadoPreguntaDTO
+                            {
+                                idPregunta = (int)reader["ID_PREGUNTA"],
+                                ordenPregunta = (int)reader["ORDEN_PREGUNTA"],
+                                estado = (int)reader["ESTADO"],
+                            });
+                        }
+                    }
+
+                }
+            }
+
+
+            return lista;
+        }
+
+
+        public async Task<List<ResultadoEvaluacionDTO>> resultadoCompetencia(int idPostulante, int idCompetencia)
+        {
+            List<ResultadoCompetenciaDTO> lista = await listaResultadoCompetencias(idCompetencia);
+            List<ResultadoEvaluacionDTO> listaResultado = new List<ResultadoEvaluacionDTO>();
+
+            foreach (ResultadoCompetenciaDTO competencia in lista)
+            {
+                List<ResultadoPreguntaDTO> listaPreguntas = await listaResultadoPreguntas(idPostulante, competencia.idCompetencia);
+                int correctos = listaPreguntas.FindAll(x => x.estado == 1).Count;
+                int incorrectos = listaPreguntas.FindAll(x => x.estado == 2).Count;
+                int enblanco = listaPreguntas.FindAll(x => x.estado == 0).Count;
+                int puntajePregunta = Convert.ToInt32(competencia.puntajePorPregunta);
+                int total = correctos + incorrectos + enblanco;
+                int puntaje = 0;
+                double puntajeTotalFinal = total * puntajePregunta;
+
+                if (total > 0 && puntajeTotalFinal == 100)
+                {
+                    puntaje = (int)((double)correctos * puntajePregunta);
+                }
+
+                if (total > 0 && puntajeTotalFinal < 100)
+                {
+                    var operacion1 = correctos * puntajePregunta;
+                    puntaje = (int)(operacion1 / puntajeTotalFinal * 100);
+                }
+
+                if (total > 0 && puntajeTotalFinal > 100)
+                {
+                    double dividendo = puntajeTotalFinal / 100.0;
+                    puntaje = (int)(correctos * puntajePregunta / dividendo);
+                }
+
+                listaResultado.Add(new ResultadoEvaluacionDTO
+                {
+
+                    preguntas = listaPreguntas,
+                    competencia = new CompetenciaResultadoDTO{
+                      id_compentencia = competencia.idCompetencia,
+                      nombreCompetencia = competencia.nombreCompetencia,
+                      descripcion = competencia.descripcion,
+                      puntajeMinimoAprobatorio = competencia.puntajeMinimoAprobatorio,
+                      puntajePregunta = competencia.puntajePorPregunta,
+                    },
+                    totalPreguntas = total,
+                    correctas = correctos,
+                    incorrectas = incorrectos,
+                    enblanco = enblanco,
+                    puntaje = puntaje
+                });
+            }
+
+            return listaResultado;
         }
     }
 }

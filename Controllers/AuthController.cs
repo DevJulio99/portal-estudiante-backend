@@ -46,7 +46,7 @@ namespace JwtLoginService
                 Email = principal.FindFirstValue("Email"),
                 Name = principal.FindFirstValue("Name"),
                 Phone = principal.FindFirstValue("Phone"),
-                Role = principal.FindFirstValue(ClaimTypes.Role)
+                Role = principal.FindFirstValue("Role")
             };
 
             var newAccessToken = _authService.GenerateJwtToken(user, 1);

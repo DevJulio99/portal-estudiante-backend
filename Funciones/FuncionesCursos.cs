@@ -55,16 +55,44 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaAlumnos;
         }
 
-        public async Task<List<PerfilDTO>> getAlumnosId(int idAlum)
+        public async Task<Boolean> existeAlumno(string? numDocUsuario)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            Boolean existe = false;
+
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($"select * from alumno where id_alumno = {idAlum}", connection);
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from alumno
+                   where dni = @dni", connection))
+            {
+                cmd.Parameters.AddWithValue("@dni", numDocUsuario);
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        existe = true;
+                    }
+                }
+            }
+
+            return existe;
+        }
+
+        public async Task<List<PerfilDTO>> getAlumnosId(string? numDocUsuario)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaAlumnos = new List<PerfilDTO>([]);
+            var existeAlumno_ = await existeAlumno(numDocUsuario);
+
+            if(existeAlumno_){
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($"select * from alumno where dni = @numDocUsuario", connection);
+            cmd.Parameters.AddWithValue("@numDocUsuario", numDocUsuario);
 
             using NpgsqlDataReader reader = cmd.ExecuteReader();
-            var listaAlumnos = new List<PerfilDTO>([]);
 
             while (reader.Read())
             {
@@ -145,23 +173,90 @@ namespace APIPostulaEnrolamiento.Funciones
                     autorizaAdicionales = false,
                     autorizaAlumni = false,
                     autorizaDatosPersonales = false
-                    // id_alumno = (int)reader["id_alumno"],
-                    // codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
-                    // nombre = reader["nombre"].ToString() ?? "",
-                    // apellidoPaterno = reader["apellido_paterno"].ToString() ?? "",
-                    // apellidoMaterno = reader["apellido_materno"].ToString() ?? "",
-                    // dni = reader["dni"].ToString() ?? "",
-                    // correo = reader["correo"].ToString() ?? "",
-                    // fechaNacimiento = reader["fecha_nacimiento"].ToString() ?? "",
-                    // telefono = reader["telefono"].ToString() ?? "",
-                    // direccion = reader["direccion"].ToString() ?? "",
-                    // fotoPerfil = reader["foto_perfil"].ToString() ?? "",
-                    // genero = reader["genero"].ToString() ?? "",
-                    // tipoAlumno = reader["tipo_alumno"].ToString() ?? "",
-                    // observaciones = reader["observaciones"].ToString() ?? "",
-                    // apoderado = reader["apoderado"].ToString() ?? "",
                 });
             }
+            }else {
+                listaAlumnos.Add(new PerfilDTO
+                {
+                    idBanner = "",
+                    pidm = "",
+                    codLineaNegocio = "",
+                    codAlumno = "",
+                    codPersona = "",
+                    codUsuario = "",
+                    codSede = "",
+                    apePatImag = "",
+                    apeMatImag = "",
+                    nombresImag = "",
+                    tipoDocumento = "",
+                    documenIdentida = "",
+                    codModalidadEstActual = "",
+                    codPeriodoActual = "",
+                    codPeriodoBanner = "",
+                    codPeriodoBannerCatalogo = "",
+                    codProductoActual = "",
+                    codPrograma = "",
+                    codNivel = "",
+                    desNivel = "",
+                    codCampus = "",
+                    desCampus = "",
+                    codEstadoAlumno = "",
+                    desEstadoAlumno = "",
+                    codTipoAlumno = "",
+                    desTipoAlumno = "",
+                    codTipoAprendizaje = "",
+                    desTipoAprendizaje = "",
+                    codTipoIngreso = "",
+                    desTipoIngreso = "",
+                    desProducto = "",
+                    desPrograma = "",
+                    usuarioEmail = "",
+                    facultad = "",
+                    facultadId = "",
+                    fotoUrl = "",//reader["foto_perfil"].ToString() ?? "",
+                    fechaNacimiento = "",
+                    sexo = "",
+                    telefono = "",
+                    celular = "",
+                    ciudad = "",
+                    direccion = "",
+                    egresado = "",
+                    ciclo = "",
+                    fullName = "otro usuarip",
+                    tipoPersona = "",
+                    codTipoUsuario = "",
+                    correoPersonal = "",
+                    cicloIngreso = "",
+                    fotoUrlLow = "",
+                    urbanizacion = "",
+                    departamento = "",
+                    distrito = "",
+                    contactoDeEmergenciaNombre = "",
+                    contactoDeEmergenciaApellido = "",
+                    contactoDeEmergenciaCelular = "",
+                    situacionLaboral = "",
+                    tipoDeEmpleo = "",
+                    modalidadEmpleo = "",
+                    empresa = "",
+                    ruc = "",
+                    direccionEmpresa = "",
+                    cargo = "",
+                    enlaceLinkedin = "",
+                    infoJefeNombre = "",
+                    infoJefeCargo = "",
+                    infoJefeCorreo = "",
+                    infoJefeTelefono = "",
+                    zipCode = "",
+                    status = "",
+                    presentationLetterStatusId = "",
+                    phoneHome = "",
+                    autorizaAdicionales = false,
+                    autorizaAlumni = false,
+                    autorizaDatosPersonales = false
+                });
+            }
+
+            
 
             return listaAlumnos;
         }
@@ -691,6 +786,43 @@ namespace APIPostulaEnrolamiento.Funciones
             return pagosList;
         }
 
+         public async Task<List<PagoDTO>> getPagosPorSede(string codigoSede)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT id_pago, documento_pago, f_vencimiento,
+            ciclo, saldo, mora, total_a_pagar, detalle, imagen, anio
+             FROM pagos where codigo_sede = @codSede", connection);
+            cmd.Parameters.AddWithValue("@codSede", codigoSede);
+
+
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var pagosList = new List<PagoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                pagosList.Add(new PagoDTO
+                {
+                    IdPago = (int)reader["id_pago"],
+                    DocumentoPago = reader["documento_pago"].ToString() ?? "",
+                    FechaVencimiento = (DateTime)reader["f_vencimiento"],
+                    Ciclo = reader["ciclo"].ToString() ?? "",
+                    Saldo = (decimal)reader["saldo"],
+                    Mora = (decimal)reader["mora"],
+                    TotalAPagar = (decimal)reader["total_a_pagar"],
+                    Detalle = reader["detalle"].ToString() ?? "",
+                    Imagen = reader["imagen"].ToString() ?? "",
+                    Anio = (int)reader["anio"]
+                });
+            }
+
+            return pagosList;
+        }
+
         public async Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
@@ -941,6 +1073,245 @@ namespace APIPostulaEnrolamiento.Funciones
                 }).ToList();
 
             return obligacionesPorPeriodo;
+        }
+
+        public async Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var status = false;
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+              connection.Open();
+
+              string dml = $@"UPDATE pagos SET imagen = @imagen WHERE id_pago = @idPago";
+
+              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
+              {
+                  cmd.Parameters.AddWithValue("@idPago", imagenPagoDto.idPago);
+                  cmd.Parameters.AddWithValue("@imagen", imagenPagoDto.imagen);
+                  try
+                  {
+                      var result = cmd.ExecuteNonQuery();
+                      status = true;
+                  }
+                  catch (Exception ex)
+                  {
+                     throw new Exception("error al actualizar");
+                  }
+              }
+            }
+
+            return status;
+        }
+
+        public async Task<List<AlumnoDTO>> getAlumnoPorSede(string codigoSede)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaAlumnos = new List<AlumnoDTO>([]);
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede(@codigoSede)", connection);
+            cmd.Parameters.AddWithValue("@codigoSede", codigoSede);
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                   listaAlumnos.Add(new AlumnoDTO {
+                    id_alumno =  Int32.Parse(reader["idalumno"].ToString() ?? "0"),
+                    codigoAlumno = reader["codigoalumno"].ToString() ?? "",
+                    nombre = reader["nombre_alumno"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno_alumno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno_alumno"].ToString() ?? "",
+                    dni = reader["dni_alumno"].ToString() ?? "",
+                    correo = reader["correo_alumno"].ToString() ?? "",
+                    telefono = reader["telefono_alumno"].ToString() ?? "",
+                    direccion = reader["direccion_alumno"].ToString() ?? "",
+                    fotoPerfil = reader["foto_perfil_alumno"].ToString() ?? "",
+                    genero = reader["genero_alumno"].ToString() ?? "",
+                    tipoAlumno = reader["tipoalumno"].ToString() ?? "",
+                    observaciones = reader["observaciones_alumno"].ToString() ?? "",
+                    apoderado = reader["apoderado_alumno"].ToString() ?? "",
+                    fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""            
+                });
+                
+            }
+            return listaAlumnos;
+        }
+
+        public async Task<Boolean> registrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+             if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+                throw new ArgumentException("El numero de documento es obligatorio");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
+                 @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                {
+
+                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
+                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
+                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
+                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
+                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
+                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
+                    command.Parameters.AddWithValue("codigosede", alumnoRegistrarDto.codigoSede);
+                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
+                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
+                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
+                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
+                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
+                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
+                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new ArgumentException("error al registrar");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+                throw new ArgumentException("El numero de documento es obligatorio");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL public.actualizar_usuario_alumno(@correo, @contraseña,
+                 @nombre, @ap, @am, @telefono, @dni, @fechanacimiento, @direccion,
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                {
+
+                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
+                    command.Parameters.AddWithValue("contraseña", alumnoRegistrarDto.contraseña ?? "");
+                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
+                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
+                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
+                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
+                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
+                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
+                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
+                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
+                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
+                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
+                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
+                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new Exception("error al actualizar");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> eliminarUsuarioAlumno(string numeroDocumento)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL eliminar_usuario_alumno(@numerodocumento)", connection))
+                {
+
+                    command.Parameters.AddWithValue("numerodocumento", numeroDocumento);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new Exception("error al eliminar");
+                    }
+                }
+            }
+
+            return true;
+        }
+        
+        public async Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var status = false;
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+              await connection.OpenAsync();
+
+            string query = @"INSERT INTO documentos
+                            (""ID_CATEGORIA_DOCUMENTO"", ""STATUS"", ""TITULO"", ""DESCRIPCION"", ""ENLACE"", ""SECUENCIA"",
+                            ""DATE_CREATED"", ""TIPO_DOCUMENTO"", ""MAS_BUSCADOS"", ""SECUENCIA_MAS_BUSCADA"", ""DOCUMENTO_VER"",
+                            ""INTERNO"", ""FECHA_ACTUALIZACION"", ""FECHA_INICIO"", ""FECHA_FIN"", ""DOCUMENTO_DESCARGA"",
+                            ""NOMBRE_DOCUMENTO"", ""TYPE"")
+                            VALUES
+                            (@idCategoriaDocumento, @status, @titulo, @descripcion, @enlace, @secuencia, @dateCreated,
+                            @tipoDocumento, @masBuscados, @secuenciaMasBuscada, @documentoVer, @interno, @fechaActualizacion,
+                            @fechaInicio, @fechaFin, @documentoDescarga, @nombreDocumento, @type)";
+
+              using (NpgsqlCommand cmd = new NpgsqlCommand(query, connection))
+              {
+                  cmd.Parameters.AddWithValue("@idCategoriaDocumento", documentoAddDto.IdCategoriaDocumento);
+                  cmd.Parameters.AddWithValue("@status", documentoAddDto.Status ?? "published");
+                  cmd.Parameters.AddWithValue("@titulo", documentoAddDto.Titulo ?? "Nuevo Documento");
+                  cmd.Parameters.AddWithValue("@descripcion", (object?)documentoAddDto.Descripcion ?? DBNull.Value);
+                  cmd.Parameters.AddWithValue("@enlace", (object?)documentoAddDto.Enlace ?? DBNull.Value);
+                  cmd.Parameters.AddWithValue("@secuencia", documentoAddDto.Secuencia ?? 0);
+                  cmd.Parameters.AddWithValue("@dateCreated", documentoAddDto.DateCreated ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@tipoDocumento", documentoAddDto.TipoDocumento ?? "pdf");
+                  cmd.Parameters.AddWithValue("@masBuscados", documentoAddDto.MasBuscados);
+                  cmd.Parameters.AddWithValue("@secuenciaMasBuscada", documentoAddDto.SecuenciaMasBuscada ?? 0);
+                  cmd.Parameters.AddWithValue("@documentoVer", documentoAddDto.Documento ?? "");
+                  cmd.Parameters.AddWithValue("@interno", documentoAddDto.Interno);
+                  cmd.Parameters.AddWithValue("@fechaActualizacion", documentoAddDto.FechaActualizacion ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@fechaInicio", documentoAddDto.FechaInicio ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@fechaFin", documentoAddDto.FechaFin ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@documentoDescarga", documentoAddDto.DocumentoDescarga ?? "");
+                  cmd.Parameters.AddWithValue("@nombreDocumento", documentoAddDto.Titulo ?? "Nuevo Documento");
+                  cmd.Parameters.AddWithValue("@type", documentoAddDto.Type ?? "application/pdf");
+
+                  try
+                  {
+                      var result = cmd.ExecuteNonQuery();
+                      status = true;
+                  }
+                  catch (Exception ex)
+                  {
+                     throw new Exception("Error al agregar el documento", ex);
+                  }
+              }
+            }
+
+            return status;
         }
     }
 }
