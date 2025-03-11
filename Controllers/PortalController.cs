@@ -608,5 +608,28 @@ namespace MyPortalStudent.Controllers
                 return StatusCode(500, error);
             }
         }
+
+        [HttpPost("agregar-documento")]
+        public async Task<IActionResult> AgregarDocumento(DocumentoAddDTO documentoAddDto)
+        {
+            try
+            {
+                var status = await _funcionesApi.AddDocument(documentoAddDto);
+                var apiResult = new { Success = status, Message = "Documento agregado correctamente", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
     }
 }

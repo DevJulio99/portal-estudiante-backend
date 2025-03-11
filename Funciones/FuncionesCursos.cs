@@ -1258,5 +1258,60 @@ namespace APIPostulaEnrolamiento.Funciones
 
             return true;
         }
+        
+        public async Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var status = false;
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+              await connection.OpenAsync();
+
+            string query = @"INSERT INTO documentos
+                            (""ID_CATEGORIA_DOCUMENTO"", ""STATUS"", ""TITULO"", ""DESCRIPCION"", ""ENLACE"", ""SECUENCIA"",
+                            ""DATE_CREATED"", ""TIPO_DOCUMENTO"", ""MAS_BUSCADOS"", ""SECUENCIA_MAS_BUSCADA"", ""DOCUMENTO_VER"",
+                            ""INTERNO"", ""FECHA_ACTUALIZACION"", ""FECHA_INICIO"", ""FECHA_FIN"", ""DOCUMENTO_DESCARGA"",
+                            ""NOMBRE_DOCUMENTO"", ""TYPE"")
+                            VALUES
+                            (@idCategoriaDocumento, @status, @titulo, @descripcion, @enlace, @secuencia, @dateCreated,
+                            @tipoDocumento, @masBuscados, @secuenciaMasBuscada, @documentoVer, @interno, @fechaActualizacion,
+                            @fechaInicio, @fechaFin, @documentoDescarga, @nombreDocumento, @type)";
+
+              using (NpgsqlCommand cmd = new NpgsqlCommand(query, connection))
+              {
+                  cmd.Parameters.AddWithValue("@idCategoriaDocumento", documentoAddDto.IdCategoriaDocumento);
+                  cmd.Parameters.AddWithValue("@status", documentoAddDto.Status ?? "published");
+                  cmd.Parameters.AddWithValue("@titulo", documentoAddDto.Titulo ?? "Nuevo Documento");
+                  cmd.Parameters.AddWithValue("@descripcion", (object?)documentoAddDto.Descripcion ?? DBNull.Value);
+                  cmd.Parameters.AddWithValue("@enlace", (object?)documentoAddDto.Enlace ?? DBNull.Value);
+                  cmd.Parameters.AddWithValue("@secuencia", documentoAddDto.Secuencia ?? 0);
+                  cmd.Parameters.AddWithValue("@dateCreated", documentoAddDto.DateCreated ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@tipoDocumento", documentoAddDto.TipoDocumento ?? "pdf");
+                  cmd.Parameters.AddWithValue("@masBuscados", documentoAddDto.MasBuscados);
+                  cmd.Parameters.AddWithValue("@secuenciaMasBuscada", documentoAddDto.SecuenciaMasBuscada ?? 0);
+                  cmd.Parameters.AddWithValue("@documentoVer", documentoAddDto.Documento ?? "");
+                  cmd.Parameters.AddWithValue("@interno", documentoAddDto.Interno);
+                  cmd.Parameters.AddWithValue("@fechaActualizacion", documentoAddDto.FechaActualizacion ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@fechaInicio", documentoAddDto.FechaInicio ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@fechaFin", documentoAddDto.FechaFin ?? DateTime.Now);
+                  cmd.Parameters.AddWithValue("@documentoDescarga", documentoAddDto.DocumentoDescarga ?? "");
+                  cmd.Parameters.AddWithValue("@nombreDocumento", documentoAddDto.Titulo ?? "Nuevo Documento");
+                  cmd.Parameters.AddWithValue("@type", documentoAddDto.Type ?? "application/pdf");
+
+                  try
+                  {
+                      var result = cmd.ExecuteNonQuery();
+                      status = true;
+                  }
+                  catch (Exception ex)
+                  {
+                     throw new Exception("Error al agregar el documento", ex);
+                  }
+              }
+            }
+
+            return status;
+        }
     }
 }
