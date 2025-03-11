@@ -500,5 +500,113 @@ namespace MyPortalStudent.Controllers
                 return StatusCode(500, ex);
             }
         }
+
+        [HttpGet("listar-alumno-sede/{codigoSede}")]
+        public async Task<IActionResult> ListarAlumnosPorSede(string codigoSede)
+        {
+            try
+            {
+                var alumnos = await _funcionesApi.getAlumnoPorSede(codigoSede);
+
+                if (alumnos == null || alumnos.Count == 0)
+                {
+                    return NotFound($"No se encontraron alumnos para la sede ingresada.");
+                }
+
+                var apiResult = new { Success = true, alumnos.Count, Data = alumnos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPost("registrar-usuario-alumno")]
+        public async Task<IActionResult> RegistrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            try
+            {
+                var estado = await _funcionesApi.registrarUsuarioAlumno(alumnoRegistrarDto);
+
+                var apiResult = new { Success = estado, Message = "Se registro usuario", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPut("actualizar-usuario-alumno")]
+        public async Task<IActionResult> ActualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            try
+            {
+                var estado = await _funcionesApi.actualizarUsuarioAlumno(alumnoRegistrarDto);
+
+                var apiResult = new { Success = true, Message = "Se actualizo usuario", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpDelete("eliminar-usuario-alumno")]
+        public async Task<IActionResult> EliminarUsuarioAlumno(string numeroDocumento)
+        {
+            try
+            {
+                var estado = await _funcionesApi.eliminarUsuarioAlumno(numeroDocumento);
+
+                var apiResult = new { Success = true, Message = "Se elimino usuario", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
     }
 }

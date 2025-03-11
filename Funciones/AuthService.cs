@@ -21,8 +21,9 @@ namespace APIPostulaEnrolamiento.Funciones
         public async Task<UserDto> ValidateUserAsync(LoginRequestDto loginRequest)
         {
             using var connection = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            const string query = @"SELECT Id, Email, Name, Phone, Dni_Usuario, Role, Codigo_Sede, (select id_alumno from alumno where dni = u.Dni_Usuario) as Id_Alumno
-             FROM Users u WHERE Email = @Email AND Password = @Password";
+            const string query = @"SELECT Id, Email, Name, Phone, Dni_Usuario, Role, Codigo_Sede, s.Tipo_Institucion, (select id_alumno from alumno where dni = u.Dni_Usuario) as Id_Alumno
+             FROM Users u INNER JOIN Sede s USING(Codigo_Sede)
+             WHERE Email = @Email AND Password = @Password AND Activo = true";
             return await connection.QueryFirstOrDefaultAsync<UserDto>(query, new { loginRequest.Email, loginRequest.Password });
         }
 
@@ -40,7 +41,8 @@ namespace APIPostulaEnrolamiento.Funciones
                 new Claim("Dni_Usuario", user.Dni_Usuario),
                 new Claim("Role", user.Role),
                 new Claim("Codigo_Sede", user.Codigo_Sede ?? ""),
-                new Claim("Id_Alumno", user.Id_Alumno ?? "0")
+                new Claim("Id_Alumno", user.Id_Alumno ?? "0"),
+                new Claim("Tipo_Institucion", user.Tipo_Institucion ?? "0")
             };
 
             var token = new JwtSecurityToken(

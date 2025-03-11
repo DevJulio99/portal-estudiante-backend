@@ -10,6 +10,7 @@ namespace MyPortalStudent.Domain
         public string Role { get; set; }
         public string Codigo_Sede { get; set; }
         public string Id_Alumno { get; set; }
+        public string Tipo_Institucion { get; set; }
     }
     
 }

@@ -1104,5 +1104,159 @@ namespace APIPostulaEnrolamiento.Funciones
 
             return status;
         }
+
+        public async Task<List<AlumnoDTO>> getAlumnoPorSede(string codigoSede)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaAlumnos = new List<AlumnoDTO>([]);
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede(@codigoSede)", connection);
+            cmd.Parameters.AddWithValue("@codigoSede", codigoSede);
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                   listaAlumnos.Add(new AlumnoDTO {
+                    id_alumno =  Int32.Parse(reader["idalumno"].ToString() ?? "0"),
+                    codigoAlumno = reader["codigoalumno"].ToString() ?? "",
+                    nombre = reader["nombre_alumno"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno_alumno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno_alumno"].ToString() ?? "",
+                    dni = reader["dni_alumno"].ToString() ?? "",
+                    correo = reader["correo_alumno"].ToString() ?? "",
+                    telefono = reader["telefono_alumno"].ToString() ?? "",
+                    direccion = reader["direccion_alumno"].ToString() ?? "",
+                    fotoPerfil = reader["foto_perfil_alumno"].ToString() ?? "",
+                    genero = reader["genero_alumno"].ToString() ?? "",
+                    tipoAlumno = reader["tipoalumno"].ToString() ?? "",
+                    observaciones = reader["observaciones_alumno"].ToString() ?? "",
+                    apoderado = reader["apoderado_alumno"].ToString() ?? "",
+                    fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""            
+                });
+                
+            }
+            return listaAlumnos;
+        }
+
+        public async Task<Boolean> registrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+             if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+                throw new ArgumentException("El numero de documento es obligatorio");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
+                 @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                {
+
+                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
+                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
+                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
+                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
+                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
+                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
+                    command.Parameters.AddWithValue("codigosede", alumnoRegistrarDto.codigoSede);
+                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
+                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
+                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
+                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
+                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
+                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
+                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new ArgumentException("error al registrar");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+                throw new ArgumentException("El numero de documento es obligatorio");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL public.actualizar_usuario_alumno(@correo, @contraseña,
+                 @nombre, @ap, @am, @telefono, @dni, @fechanacimiento, @direccion,
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                {
+
+                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
+                    command.Parameters.AddWithValue("contraseña", alumnoRegistrarDto.contraseña ?? "");
+                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
+                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
+                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
+                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
+                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
+                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
+                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
+                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
+                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
+                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
+                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
+                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new Exception("error al actualizar");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> eliminarUsuarioAlumno(string numeroDocumento)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand(@"CALL eliminar_usuario_alumno(@numerodocumento)", connection))
+                {
+
+                    command.Parameters.AddWithValue("numerodocumento", numeroDocumento);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new Exception("error al eliminar");
+                    }
+                }
+            }
+
+            return true;
+        }
     }
 }
