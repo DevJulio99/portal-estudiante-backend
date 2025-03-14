@@ -631,5 +631,35 @@ namespace MyPortalStudent.Controllers
                 return StatusCode(500, ex);
             }
         }
+
+        [HttpGet("listar-grados")]
+        public async Task<IActionResult> ListarGrados()
+        {
+            try
+            {
+                var grados = await _funcionesApi.GetGrados();
+
+                if (grados == null || grados.Count == 0)
+                {
+                    return NotFound("No se encontraron grados registrados.");
+                }
+
+                var apiResult = new { Success = true, Count = grados.Count, Data = grados };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new { Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
     }
 }

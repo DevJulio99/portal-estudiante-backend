@@ -50,6 +50,8 @@ namespace APIPostulaEnrolamiento.Funciones
                     tipoAlumno = reader["tipo_alumno"].ToString() ?? "",
                     observaciones = reader["observaciones"].ToString() ?? "",
                     apoderado = reader["apoderado"].ToString() ?? "",
+                    idGrado = Int32.TryParse(reader["id_grado_alumno"].ToString(), out var idGrado) ? idGrado : 0,
+                    habilitadoPrueba = Boolean.TryParse(reader["habilitado_prueba_alumno"].ToString(), out var habilitadoPrueba) && habilitadoPrueba
                 });
             }
             return listaAlumnos;
@@ -1134,7 +1136,9 @@ namespace APIPostulaEnrolamiento.Funciones
                     tipoAlumno = reader["tipoalumno"].ToString() ?? "",
                     observaciones = reader["observaciones_alumno"].ToString() ?? "",
                     apoderado = reader["apoderado_alumno"].ToString() ?? "",
-                    fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""            
+                    fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""  ,
+                    idGrado = Int32.TryParse(reader["id_grado_alumno"].ToString(), out var idGrado) ? idGrado : 0,
+                    habilitadoPrueba = Boolean.TryParse(reader["habilitado_prueba_alumno"].ToString(), out var habilitadoPrueba) && habilitadoPrueba
                 });
                 
             }
@@ -1154,7 +1158,7 @@ namespace APIPostulaEnrolamiento.Funciones
                 connection.Open();
                 using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
                  @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
-                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
                 {
 
                     command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
@@ -1172,6 +1176,8 @@ namespace APIPostulaEnrolamiento.Funciones
                     command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
                     command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
                     command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+                    command.Parameters.AddWithValue("gradoalumno", alumnoRegistrarDto.idGrado);
+                    command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
 
                     try
                     {
@@ -1200,7 +1206,7 @@ namespace APIPostulaEnrolamiento.Funciones
                 connection.Open();
                 using (var command = new NpgsqlCommand(@"CALL public.actualizar_usuario_alumno(@correo, @contraseña,
                  @nombre, @ap, @am, @telefono, @dni, @fechanacimiento, @direccion,
-                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion)", connection))
+                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
                 {
 
                     command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
@@ -1218,6 +1224,8 @@ namespace APIPostulaEnrolamiento.Funciones
                     command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
                     command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
                     command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
+                    command.Parameters.AddWithValue("gradoalumno", alumnoRegistrarDto.idGrado);
+                    command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
 
                     try
                     {
@@ -1312,6 +1320,37 @@ namespace APIPostulaEnrolamiento.Funciones
             }
 
             return status;
+        }
+
+        public async Task<List<GradoDTO>> GetGrados()
+        {
+            var grados = new List<GradoDTO>();
+
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query = @"SELECT ""ID_GRADO"", ""NUMERO_GRADO"", ""DESCRIPCION_GRADO"", ""NIVEL_EDUCATIVO"" FROM public.grado";
+
+                using (var cmd = new NpgsqlCommand(query, connection))
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        grados.Add(new GradoDTO
+                        {
+                            IdGrado = reader.GetInt32(0),
+                            NumeroGrado = reader.GetInt32(1),
+                            DescripcionGrado = reader.GetString(2),
+                            NivelEducativo = reader.GetString(3)
+                        });
+                    }
+                }
+            }
+
+            return grados;
         }
     }
 }

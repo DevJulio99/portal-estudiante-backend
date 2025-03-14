@@ -25,5 +25,6 @@ public interface IFuncionesApi
         Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto);
         Task<Boolean> eliminarUsuarioAlumno(string numeroDocumento);
         Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto);
+        Task<List<GradoDTO>> GetGrados();
     }
 }
