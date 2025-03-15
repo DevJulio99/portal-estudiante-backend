@@ -1107,15 +1107,22 @@ namespace APIPostulaEnrolamiento.Funciones
             return status;
         }
 
-        public async Task<List<AlumnoDTO>> getAlumnoPorSede(string codigoSede)
+        public async Task<List<AlumnoDTO>> getAlumnoPorSede(ListaAlumnoDTO listaAlumno)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaAlumnos = new List<AlumnoDTO>([]);
+             int pagina = 0;
+
+            if(listaAlumno.pagina > 1){
+                pagina = (listaAlumno.pagina - 1) * listaAlumno.itemsPorPagina;
+            }
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             connection.Open();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede(@codigoSede)", connection);
-            cmd.Parameters.AddWithValue("@codigoSede", codigoSede);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
+            cmd.Parameters.AddWithValue("codigoSede", listaAlumno.codigoSede);
+            cmd.Parameters.AddWithValue("Pagina", pagina);
+            cmd.Parameters.AddWithValue("itemsPorPagina", listaAlumno.itemsPorPagina);
             using NpgsqlDataReader reader = cmd.ExecuteReader();
 
 
@@ -1138,7 +1145,57 @@ namespace APIPostulaEnrolamiento.Funciones
                     apoderado = reader["apoderado_alumno"].ToString() ?? "",
                     fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""  ,
                     idGrado = Int32.TryParse(reader["id_grado_alumno"].ToString(), out var idGrado) ? idGrado : 0,
-                    habilitadoPrueba = Boolean.TryParse(reader["habilitado_prueba_alumno"].ToString(), out var habilitadoPrueba) && habilitadoPrueba
+                    habilitadoPrueba = Boolean.TryParse(reader["habilitado_prueba_alumno"].ToString(), out var habilitadoPrueba) && habilitadoPrueba,
+                    total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
+                });
+                
+            }
+            return listaAlumnos;
+        }
+
+        public async Task<List<AlumnoDTO>> filtrarAlumno(FiltroAlumnoDTO filtroAlumno)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaAlumnos = new List<AlumnoDTO>([]);
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+            int pagina = 0;
+
+            if(filtroAlumno.pagina > 1){
+                pagina = (filtroAlumno.pagina - 1) * filtroAlumno.itemsPorPagina;
+            }
+
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_alumnos_paginado(@codigoSede, @filtro, @pagina, @itemsPorPagina)", connection);
+            cmd.Parameters.AddWithValue("codigoSede", filtroAlumno.codigoSede);
+            cmd.Parameters.AddWithValue("filtro", filtroAlumno.filtro);
+            cmd.Parameters.AddWithValue("pagina", pagina);
+            cmd.Parameters.AddWithValue("itemsPorPagina", filtroAlumno.itemsPorPagina);
+
+            using NpgsqlDataReader reader = cmd.ExecuteReader();
+
+
+            while (reader.Read())
+            {
+                   listaAlumnos.Add(new AlumnoDTO {
+                    id_alumno =  Int32.Parse(reader["idalumno"].ToString() ?? "0"),
+                    codigoAlumno = reader["codigoalumno"].ToString() ?? "",
+                    nombre = reader["nombre_alumno"].ToString() ?? "",
+                    apellidoPaterno = reader["apellido_paterno_alumno"].ToString() ?? "",
+                    apellidoMaterno = reader["apellido_materno_alumno"].ToString() ?? "",
+                    dni = reader["dni_alumno"].ToString() ?? "",
+                    correo = reader["correo_alumno"].ToString() ?? "",
+                    telefono = reader["telefono_alumno"].ToString() ?? "",
+                    direccion = reader["direccion_alumno"].ToString() ?? "",
+                    fotoPerfil = reader["foto_perfil_alumno"].ToString() ?? "",
+                    genero = reader["genero_alumno"].ToString() ?? "",
+                    tipoAlumno = reader["tipoalumno"].ToString() ?? "",
+                    observaciones = reader["observaciones_alumno"].ToString() ?? "",
+                    apoderado = reader["apoderado_alumno"].ToString() ?? "",
+                    fechaNacimiento = reader["fecha_nacimiento_alumno"].ToString() ?? ""  ,
+                    idGrado = Int32.TryParse(reader["id_grado_alumno"].ToString(), out var idGrado) ? idGrado : 0,
+                    habilitadoPrueba = Boolean.TryParse(reader["habilitado_prueba_alumno"].ToString(), out var habilitadoPrueba) && habilitadoPrueba,
+                    total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
                 });
                 
             }
