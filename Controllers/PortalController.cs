@@ -501,16 +501,46 @@ namespace MyPortalStudent.Controllers
             }
         }
 
-        [HttpGet("listar-alumno-sede/{codigoSede}")]
-        public async Task<IActionResult> ListarAlumnosPorSede(string codigoSede)
+        [HttpPost("listar-alumno-sede")]
+        public async Task<IActionResult> ListarAlumnosPorSede(ListaAlumnoDTO listaAlumno)
         {
             try
             {
-                var alumnos = await _funcionesApi.getAlumnoPorSede(codigoSede);
+                var alumnos = await _funcionesApi.getAlumnoPorSede(listaAlumno);
 
                 if (alumnos == null || alumnos.Count == 0)
                 {
                     return NotFound($"No se encontraron alumnos para la sede ingresada.");
+                }
+
+                var apiResult = new { Success = true, alumnos.Count, Data = alumnos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPost("filtrar-alumno-sede")]
+        public async Task<IActionResult> ListarAlumnosPorSede(FiltroAlumnoDTO filtroAlumno)
+        {
+            try
+            {
+                var alumnos = await _funcionesApi.filtrarAlumno(filtroAlumno);
+
+                if (alumnos == null || alumnos.Count == 0)
+                {
+                    return NotFound($"No se encontraron alumnos.");
                 }
 
                 var apiResult = new { Success = true, alumnos.Count, Data = alumnos };
@@ -629,6 +659,36 @@ namespace MyPortalStudent.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex);
+            }
+        }
+
+        [HttpGet("listar-grados")]
+        public async Task<IActionResult> ListarGrados()
+        {
+            try
+            {
+                var grados = await _funcionesApi.GetGrados();
+
+                if (grados == null || grados.Count == 0)
+                {
+                    return NotFound("No se encontraron grados registrados.");
+                }
+
+                var apiResult = new { Success = true, Count = grados.Count, Data = grados };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new { Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
             }
         }
     }

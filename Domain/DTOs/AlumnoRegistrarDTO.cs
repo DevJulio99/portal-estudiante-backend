@@ -17,5 +17,7 @@ public class AlumnoRegistrarDTO
     public required string observaciones { get; set; }
     public required string apoderado { get; set; }
     public required string tipoInstitucion { get; set; }
+    public required int idGrado { get; set; }
+    public required Boolean habilitadoPrueba { get; set; }
 }
 }
