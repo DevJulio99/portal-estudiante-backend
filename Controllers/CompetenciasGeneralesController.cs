@@ -260,14 +260,14 @@ namespace MyPortalStudent.Controllers
             }
         }
 
-        [HttpGet("listar-estado-competencia/{idPostulante}")]
-        public async Task<ActionResult> RegistrarEstadoCompetencia(int idPostulante)
+        [HttpGet("listar-estado-competencia/{idPostulante}/{idCompetencia}")]
+        public async Task<ActionResult> RegistrarEstadoCompetencia(int idPostulante, int idCompetencia)
         {
             var apiResult = new ApiResult<Object>();
 
             try
             {
-                var lista = await _service.listarEstadoCompetencia(idPostulante , null);
+                var lista = await _service.listarEstadoCompetencia(idPostulante , idCompetencia);
                 apiResult.Message = lista.Count > 0 ? "Se encontro estados" : "No se pudo encontrar estados";
                 apiResult.Success = lista.Count > 0;
                 apiResult.Data = lista;
