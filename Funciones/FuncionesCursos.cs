@@ -788,18 +788,22 @@ namespace APIPostulaEnrolamiento.Funciones
             return pagosList;
         }
 
-         public async Task<List<PagoDTO>> getPagosPorSede(string codigoSede)
+         public async Task<List<PagoDTO>> getPagosPorSede(SedePaginadoDTO sedePaginadoDto)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+             int pagina = 0;
+
+            if(sedePaginadoDto.pagina > 1){
+                pagina = (sedePaginadoDto.pagina - 1) * sedePaginadoDto.itemsPorPagina;
+            }
 
             using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT id_pago, documento_pago, f_vencimiento,
-            ciclo, saldo, mora, total_a_pagar, detalle, imagen, anio
-             FROM pagos where codigo_sede = @codSede", connection);
-            cmd.Parameters.AddWithValue("@codSede", codigoSede);
-
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from listar_pagos_por_sede_paginado(@codSede, @pagina, @itemPagina)", connection);
+            cmd.Parameters.AddWithValue("codSede", sedePaginadoDto.codigoSede);
+            cmd.Parameters.AddWithValue("pagina", pagina);
+            cmd.Parameters.AddWithValue("itemPagina", sedePaginadoDto.itemsPorPagina);
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             
@@ -809,16 +813,17 @@ namespace APIPostulaEnrolamiento.Funciones
             {
                 pagosList.Add(new PagoDTO
                 {
-                    IdPago = (int)reader["id_pago"],
-                    DocumentoPago = reader["documento_pago"].ToString() ?? "",
-                    FechaVencimiento = (DateTime)reader["f_vencimiento"],
-                    Ciclo = reader["ciclo"].ToString() ?? "",
-                    Saldo = (decimal)reader["saldo"],
-                    Mora = (decimal)reader["mora"],
-                    TotalAPagar = (decimal)reader["total_a_pagar"],
-                    Detalle = reader["detalle"].ToString() ?? "",
-                    Imagen = reader["imagen"].ToString() ?? "",
-                    Anio = (int)reader["anio"]
+                    IdPago = (int)reader["idpago"],
+                    DocumentoPago = reader["documentopago"].ToString() ?? "",
+                    FechaVencimiento = (DateTime)reader["fechav"],
+                    Ciclo = reader["ciclopago"].ToString() ?? "",
+                    Saldo = (decimal)reader["saldopago"],
+                    Mora = (decimal)reader["morapago"],
+                    TotalAPagar = (decimal)reader["totalpago"],
+                    Detalle = reader["detallepago"].ToString() ?? "",
+                    Imagen = reader["imagepago"].ToString() ?? "",
+                    Anio = (int)reader["aniopago"],
+                    total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
                 });
             }
 
@@ -1107,11 +1112,11 @@ namespace APIPostulaEnrolamiento.Funciones
             return status;
         }
 
-        public async Task<List<AlumnoDTO>> getAlumnoPorSede(ListaAlumnoDTO listaAlumno)
+        public async Task<List<AlumnoDTO>> getAlumnoPorSede(SedePaginadoDTO listaAlumno)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaAlumnos = new List<AlumnoDTO>([]);
-             int pagina = 0;
+            int pagina = 0;
 
             if(listaAlumno.pagina > 1){
                 pagina = (listaAlumno.pagina - 1) * listaAlumno.itemsPorPagina;

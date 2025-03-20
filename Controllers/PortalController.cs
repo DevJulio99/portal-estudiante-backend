@@ -472,12 +472,12 @@ namespace MyPortalStudent.Controllers
             }
         }
 
-        [HttpGet("listar-pago-sede/{codigoSede}")]
-        public async Task<IActionResult> ListarPagosPorSede(string codigoSede)
+        [HttpPost("listar-pago-sede")]
+        public async Task<IActionResult> ListarPagosPorSede(SedePaginadoDTO sedePaginadoDto)
         {
             try
             {
-                var pagos = await _funcionesApi.getPagosPorSede(codigoSede);
+                var pagos = await _funcionesApi.getPagosPorSede(sedePaginadoDto);
 
                 if (pagos == null || pagos.Count == 0)
                 {
@@ -502,7 +502,7 @@ namespace MyPortalStudent.Controllers
         }
 
         [HttpPost("listar-alumno-sede")]
-        public async Task<IActionResult> ListarAlumnosPorSede(ListaAlumnoDTO listaAlumno)
+        public async Task<IActionResult> ListarAlumnosPorSede(SedePaginadoDTO listaAlumno)
         {
             try
             {
