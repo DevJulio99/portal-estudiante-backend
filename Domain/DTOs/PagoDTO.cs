@@ -10,4 +10,5 @@ public class PagoDTO
     public string Detalle { get; set; }
     public string Imagen { get; set; }
     public int Anio { get; set; }
+    public int total { get; set; }
 }

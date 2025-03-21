@@ -19,8 +19,8 @@ public interface IFuncionesApi
         Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId);
         Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno);
         Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto);
-        Task<List<PagoDTO>> getPagosPorSede(string codigoSede);
-        Task<List<AlumnoDTO>> getAlumnoPorSede(ListaAlumnoDTO listaAlumno);
+        Task<List<PagoDTO>> getPagosPorSede(SedePaginadoDTO sedePaginadoDto);
+        Task<List<AlumnoDTO>> getAlumnoPorSede(SedePaginadoDTO listaAlumno);
         Task<List<AlumnoDTO>> filtrarAlumno(FiltroAlumnoDTO filtroAlumno);
         Task<Boolean> registrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto);
         Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto);
