@@ -81,6 +81,36 @@ namespace APIPostulaEnrolamiento.Funciones
             return existe;
         }
 
+        public async Task<string> asistenciasPorCursoAlumno(AsistenciaCursoAlumnoDTO asistenciaCursoAlumnoDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            string total = "0";
+
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select * from asistencias_por_curso_alumno(
+                  @idAlumno,@anio, @inicioPeriodo,@finalPeriodo, @codCurso, @estadoAsistencia)", connection))
+            {
+                cmd.Parameters.AddWithValue("@idAlumno", asistenciaCursoAlumnoDto.idAlumno);
+                cmd.Parameters.AddWithValue("@anio", asistenciaCursoAlumnoDto.anio);
+                cmd.Parameters.AddWithValue("@inicioPeriodo", asistenciaCursoAlumnoDto.inicioPeriodo);
+                cmd.Parameters.AddWithValue("@finalPeriodo", asistenciaCursoAlumnoDto.finalPeriodo);
+                cmd.Parameters.AddWithValue("@codCurso", asistenciaCursoAlumnoDto.codigoCurso);
+                cmd.Parameters.AddWithValue("@estadoAsistencia", asistenciaCursoAlumnoDto.estadoAsistencia);
+
+                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        total = reader["cantidad"].ToString() ?? "0";
+                    }
+                }
+            }
+
+            return total;
+        }
+
         public async Task<List<PerfilDTO>> getAlumnosId(string? numDocUsuario)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
@@ -548,14 +578,26 @@ namespace APIPostulaEnrolamiento.Funciones
             {
                 var fechaActual = DateTime.Now;
                 var fechaActualTiempo = fechaActual.Ticks;
-                var fechaIniciotiempo = DateTime.ParseExact(reader["fecha_inicio"].ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                var fechaFintiempo = DateTime.ParseExact(reader["fecha_fin"].ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var fechaInicioString = reader["fecha_inicio"].ToString();
+                var fechaFinString = reader["fecha_fin"].ToString();
+                var fechaIniciotiempo = DateTime.ParseExact(fechaInicioString, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                var fechaFintiempo = DateTime.ParseExact(fechaFinString, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
                 var actualBimestre = fechaActualTiempo >= fechaIniciotiempo.Ticks && fechaActualTiempo <= fechaFintiempo.Ticks;
+                var codCurso = reader["cod_cursos_matriculados"].ToString() ?? "";
+                var request = new AsistenciaCursoAlumnoDTO(){
+                    idAlumno = idAlum,
+                    anio = anio,
+                    inicioPeriodo = DateTime.Parse(fechaInicioString),
+                    finalPeriodo = DateTime.Parse(fechaFinString),
+                    codigoCurso = codCurso,
+                    estadoAsistencia = "Ausente"
+                };
+                var inasistencias = await asistenciasPorCursoAlumno(request);
 
                 if(actualBimestre){
                    listaReporteColegio.Add(new ReporteMatriculaColegioDTO {
                     modalidad = "Presencial",
-                    codCurso = reader["cod_cursos_matriculados"].ToString() ?? "",
+                    codCurso = codCurso,
                     descCurso = reader["cursos_matriculados"].ToString() ?? "",
                     periodo = reader["periodo_academico"].ToString() ?? "",
                     salon = "",
@@ -574,7 +616,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     ciclo = "",
                     creditos = "",
                     cantidadVeces = "0",
-                    inasistencias = "0",
+                    inasistencias = inasistencias,
                     statusCurso = "Iniciado",
                     orden = 1,
                     notaFinal = 0,
@@ -583,21 +625,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     nivel = reader["nivel"].ToString() ?? "",
                     periodoAcademico = reader["periodo_academico"].ToString() ?? "",
                     fechaInicio = reader["fecha_inicio"].ToString() ?? "",
-                    fechaFin = reader["fecha_fin"].ToString() ?? "",
-                    // alumnoNombre = reader["alumno_nombre"].ToString() ?? "",
-                    // alumnoApellidoPaterno = reader["alumno_apellido_paterno"].ToString() ?? "",
-                    // alumnoApellidoMaterno = reader["alumno_apellido_materno"].ToString() ?? "",
-                    // codigoAlumno = reader["codigo_alumno"].ToString() ?? "",
-                    // cursosMatriculados = reader["cursos_matriculados"].ToString() ?? "",
-                    // docenteNombre = reader["docente_nombre"].ToString() ?? "",
-                    // estadoMatricula = reader["estado_matricula"].ToString() ?? "",
-                    // fechaFin = reader["fecha_fin"].ToString() ?? "",
-                    // fechaInicio = reader["fecha_inicio"].ToString() ?? "",
-                    // grado = reader["grado"].ToString() ?? "",
-                    // nivel = reader["nivel"].ToString() ?? "",
-                    // periodoAcademico = reader["periodo_academico"].ToString() ?? "",
-                    // seccion = reader["seccion"].ToString() ?? "",
-                    // tipoMatricula = reader["tipo_matricula"].ToString() ?? "",          
+                    fechaFin = reader["fecha_fin"].ToString() ?? "",       
                 });
                 }
                 
