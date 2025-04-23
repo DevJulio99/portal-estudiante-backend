@@ -6,8 +6,6 @@ using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
 using MyPortalStudent.Domain.IServices;
 using MyPortalStudent.Services;
-using MyPortalStudent.Utils;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddHostedService<Worker>();
@@ -23,14 +21,6 @@ builder.Services.AddCors(opciones =>
         configuracion.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
-
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var redisConfiguration = builder.Configuration.GetValue<string>("Redis:ConnectionString")!;
-    return ConnectionMultiplexer.Connect(redisConfiguration);
-});
-
-builder.Services.AddSingleton<IRedisDB, RedisDB>();
 
 builder.Services.AddControllers();
 

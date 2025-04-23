@@ -1,6 +1,4 @@
 ﻿
-using MyPortalStudent.Domain.DTOs;
-
 namespace MyPortalStudent.Domain
 {
     public class ApiResult<T>
@@ -10,7 +8,6 @@ namespace MyPortalStudent.Domain
             this.Success = true;
             this.Code = "PS-EVAL";
             this.Message = "Se procesó la información correctamente";
-            this.validations = [];
         }
         /// <summary>
         /// TRUE if the Api attempt is successful, FALSE otherwise.
@@ -28,6 +25,5 @@ namespace MyPortalStudent.Domain
         /// Return the data for Api
         /// </summary>
         public T? Data { get; set; }
-        public List<ApiValidation> validations { get; set; }
     }
 }
