@@ -6,8 +6,6 @@ using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
 using MyPortalStudent.Domain.IServices;
 using MyPortalStudent.Services;
-using MyPortalStudent.Utils;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddHostedService<Worker>();
@@ -24,25 +22,6 @@ builder.Services.AddCors(opciones =>
     });
 });
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var host = Environment.GetEnvironmentVariable("REDISHOST") ?? "localhost";
-    var port = Environment.GetEnvironmentVariable("REDISPORT") ?? "6379";
-    var password = Environment.GetEnvironmentVariable("REDISPASSWORD");
-
-    var configurationOptions = new ConfigurationOptions
-    {
-        EndPoints = { $"{host}:{port}" },
-        Password = password,
-        Ssl = true,
-        AbortOnConnectFail = false
-    };
-
-    return ConnectionMultiplexer.Connect(configurationOptions);
-});
-
-builder.Services.AddSingleton<IRedisDB, RedisDB>();
-
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -57,6 +36,9 @@ builder.Services.AddSwaggerGen(
             Description = "Servicio."
         }
         );
+        // var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
     }
 );
 
