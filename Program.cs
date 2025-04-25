@@ -26,19 +26,8 @@ builder.Services.AddCors(opciones =>
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var host = Environment.GetEnvironmentVariable("REDISHOST") ?? "localhost";
-    var port = Environment.GetEnvironmentVariable("REDISPORT") ?? "6379";
-    var password = Environment.GetEnvironmentVariable("REDISPASSWORD");
-
-    var configurationOptions = new ConfigurationOptions
-    {
-        EndPoints = { $"{host}:{port}" },
-        Password = password,
-        Ssl = true,
-        AbortOnConnectFail = false
-    };
-
-    return ConnectionMultiplexer.Connect(configurationOptions);
+    var redisConfiguration = builder.Configuration.GetValue<string>("Redis:ConnectionString")!;
+    return ConnectionMultiplexer.Connect(redisConfiguration);
 });
 
 builder.Services.AddSingleton<IRedisDB, RedisDB>();
