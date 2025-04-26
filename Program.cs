@@ -1,7 +1,9 @@
+using System.Threading.RateLimiting;
 using APIPostulaEnrolamiento.Funciones;
 using JwtLoginService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
 using MyPortalStudent.Domain.Ifunciones;
 using MyPortalStudent.Domain.IServices;
@@ -29,6 +31,27 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     var redisConfiguration = builder.Configuration.GetValue<string>("Redis:ConnectionString")!;
     return ConnectionMultiplexer.Connect(redisConfiguration);
 });
+
+builder.Services.AddRateLimiter(options =>
+ {
+     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+     {
+         var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+         var path = context.Request.Path.ToString().ToLower();
+ 
+         var key = $"{ip}:{path}";
+ 
+         return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+         {
+             PermitLimit = 3,
+             Window = TimeSpan.FromSeconds(1),
+             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+             QueueLimit = 0
+         });
+     });
+ 
+     options.RejectionStatusCode = 429;
+ });
 
 builder.Services.AddSingleton<IRedisDB, RedisDB>();
 
@@ -60,6 +83,7 @@ builder.Services.AddScoped<ICompetenciasGeneralesService, CompetenciasGeneralesS
 var app = builder.Build();
 
 app.UseCors("validarConsumo");
+app.UseRateLimiter();
 
 app.UseSwagger();
 app.UseSwaggerUI();
