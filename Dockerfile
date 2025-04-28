@@ -1,48 +1,39 @@
 # Etapa 1: Construcción de la aplicación
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Instalar dependencias necesarias para SkiaSharp en Alpine
-RUN apk update && apk add --no-cache \
-    fontconfig \
-    freetype \
-    libx11 \
-    libxext \
-    libxrender \
-    libglvnd \
-    atk \
-    gdk-pixbuf \
-    && rm -rf /var/cache/apk/*
-
 # Copiar los archivos del proyecto y restaurar dependencias
-COPY ["MyPortalStudent.csproj", "."]
-RUN dotnet restore "MyPortalStudent.csproj"
+COPY ["MyPortalStudent/MyPortalStudent.csproj", "MyPortalStudent/"]
+RUN dotnet restore "MyPortalStudent/MyPortalStudent.csproj"
 
 # Copiar todo el código fuente y compilar en modo Release
 COPY . . 
+WORKDIR "/app/MyPortalStudent"
 RUN dotnet build "MyPortalStudent.csproj" -c Release -o /app/build
 
 # Publicar la aplicación
 RUN dotnet publish "MyPortalStudent.csproj" -c Release -o /app/publish
 
 # Etapa 2: Imagen final para ejecución
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+
+# Instalar dependencias necesarias para SkiaSharp en una imagen basada en Debian/Ubuntu (más robusta)
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libgl1-mesa-glx \
+    libatk1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establecer el directorio de trabajo en la imagen final
 WORKDIR /app
 
-# Instalar dependencias necesarias para SkiaSharp en Alpine
-RUN apk update && apk add --no-cache \
-    fontconfig \
-    freetype \
-    libx11 \
-    libxext \
-    libxrender \
-    libglvnd \
-    atk \
-    gdk-pixbuf \
-    && rm -rf /var/cache/apk/*
-
 # Copiar la aplicación compilada desde la etapa de construcción
-COPY --from=build /app/publish . 
+COPY --from=build /app/publish .
 
 # Establecer la entrada del servicio Worker
 ENTRYPOINT ["dotnet", "MyPortalStudent.dll"]
