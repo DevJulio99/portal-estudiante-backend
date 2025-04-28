@@ -9,6 +9,11 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- Deshabilitar HTTPS en despliegue -->
     <ASPNETCORE_URLS>http://*:$PORT</ASPNETCORE_URLS>
+
+    <!-- Agregar configuración para un despliegue "self-contained" y asegurar que las librerías nativas estén incluidas -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier> <!-- Asegúrate que esto está configurado -->
   </PropertyGroup>
 
   <ItemGroup>
