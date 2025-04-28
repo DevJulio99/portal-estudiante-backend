@@ -2,6 +2,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
+# Instalar dependencias necesarias para SkiaSharp
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libgl1-mesa-glx \
+    libatk1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    libskia.so \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copiar los archivos del proyecto y restaurar dependencias
 COPY ["MyPortalStudent.csproj", "."]
 RUN dotnet restore "MyPortalStudent.csproj"
@@ -16,6 +29,18 @@ RUN dotnet publish "MyPortalStudent.csproj" -c Release -r linux-x64 --self-conta
 # Etapa 2: Imagen final para ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
+
+# Instalar las dependencias necesarias para SkiaSharp
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxrender1 \
+    libgl1-mesa-glx \
+    libatk1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copiar la aplicación compilada desde la etapa de construcción
 COPY --from=build /app/publish .
