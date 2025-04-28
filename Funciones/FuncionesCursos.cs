@@ -1442,5 +1442,195 @@ namespace APIPostulaEnrolamiento.Funciones
 
             return grados;
         }
+
+        public async Task<List<CursoListarDTO>> ListarCursosPorSede(SedePaginadoDTO listaCurso)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaCursos = new List<CursoListarDTO>([]);
+            int pagina = 0;
+
+            if(listaCurso.pagina > 1){
+                pagina = (listaCurso.pagina - 1) * listaCurso.itemsPorPagina;
+            }
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_cursos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
+            cmd.Parameters.AddWithValue("codigoSede", listaCurso.codigoSede);
+            cmd.Parameters.AddWithValue("pagina", pagina);
+            cmd.Parameters.AddWithValue("itemsPorPagina", listaCurso.itemsPorPagina);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+
+            while (await reader.ReadAsync())
+            {
+                listaCursos.Add(new CursoListarDTO
+                {
+                    IdCurso  =  Int32.Parse(reader["idcurso"].ToString() ?? "0"),
+                    CodigoCurso = reader["codigocurso"].ToString() ?? "",
+                    Descripcion = reader["descripcioncurso"].ToString() ?? string.Empty,
+                    Creditos = decimal.Parse(reader["creditoscurso"].ToString() ?? "0"),
+                    Modalidad = reader["modalidadcurso"].ToString() ?? string.Empty,
+                    Nivel = reader["nivelcurso"].ToString() ?? string.Empty,
+                    Total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
+                });
+                
+            }
+            return listaCursos;
+        }
+
+        public async Task<List<CursoListarDTO>> FiltrarCurso(FiltroCursoDTO filtroCurso)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var listaCursos = new List<CursoListarDTO>([]);
+            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+            int pagina = 0;
+
+            if(filtroCurso.pagina > 1){
+                pagina = (filtroCurso.pagina - 1) * filtroCurso.itemsPorPagina;
+            }
+
+
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_cursos_paginado(@codigoSede, @filtro, @pagina, @itemsPorPagina)", connection);
+            cmd.Parameters.AddWithValue("codigoSede", filtroCurso.codigoSede);
+            cmd.Parameters.AddWithValue("filtro", filtroCurso.filtro);
+            cmd.Parameters.AddWithValue("pagina", pagina);
+            cmd.Parameters.AddWithValue("itemsPorPagina", filtroCurso.itemsPorPagina);
+
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+
+            while (await reader.ReadAsync())
+            {
+                   listaCursos.Add(new CursoListarDTO {
+                    IdCurso  =  Int32.Parse(reader["idcurso"].ToString() ?? "0"),
+                    CodigoCurso = reader["codigocurso"].ToString() ?? "",
+                    Descripcion = reader["descripcioncurso"].ToString() ?? string.Empty,
+                    Creditos = decimal.Parse(reader["creditoscurso"].ToString() ?? "0"),
+                    Modalidad = reader["modalidadcurso"].ToString() ?? string.Empty,
+                    Nivel = reader["nivelcurso"].ToString() ?? string.Empty,
+                    Total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
+                });                
+            }
+            return listaCursos;
+        }
+
+        public async Task<Boolean> RegistrarCurso(CursoRegistrarDTO cursoRegistrarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+             if(string.IsNullOrEmpty(cursoRegistrarDto.DescripcionCurso)){
+                throw new ArgumentException("El nombre del curso es obligatorio");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new NpgsqlCommand(@"CALL public.insertar_curso(@descripcion, @creditos,
+                @modalidad, @nivel, @codSede)", connection))
+                {
+                    command.Parameters.AddWithValue("descripcion", cursoRegistrarDto.DescripcionCurso);
+                    command.Parameters.AddWithValue("creditos", cursoRegistrarDto.Creditos);
+                    command.Parameters.AddWithValue("modalidad", cursoRegistrarDto.Modalidad);
+                    command.Parameters.AddWithValue("nivel", cursoRegistrarDto.Nivel);
+                    command.Parameters.AddWithValue("codSede", cursoRegistrarDto.CodigoSede);
+
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (PostgresException ex)
+                    {
+                       throw new ArgumentException(ex.MessageText);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"Error al registrar el curso: {ex.Message}");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> ActualizarCurso(CursoActualizarDTO cursoActualizarDto)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+             if(string.IsNullOrEmpty(cursoActualizarDto.DescripcionCurso)){
+                throw new ArgumentException("El nombre del curso es obligatorio");
+            }
+
+            if (cursoActualizarDto.IdCurso <= 0)
+            {
+                throw new ArgumentException("El id del curso debe ser un número positivo");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new NpgsqlCommand(@"CALL public.actualizar_curso(@id, @descripcion, @creditos,
+                @modalidad, @nivel, @codSede)", connection))
+                {
+                    command.Parameters.AddWithValue("id", cursoActualizarDto.IdCurso);
+                    command.Parameters.AddWithValue("descripcion", cursoActualizarDto.DescripcionCurso);
+                    command.Parameters.AddWithValue("creditos", cursoActualizarDto.Creditos);
+                    command.Parameters.AddWithValue("modalidad", cursoActualizarDto.Modalidad);
+                    command.Parameters.AddWithValue("nivel", cursoActualizarDto.Nivel);
+                    command.Parameters.AddWithValue("codSede", cursoActualizarDto.CodigoSede);
+
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (PostgresException ex)
+                    {
+                       throw new ArgumentException(ex.MessageText);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"Error al actualizar el curso: {ex.Message}");
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> EliminarCurso(int idCurso)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            if (idCurso <= 0)
+            {
+                throw new ArgumentException("El id del curso debe ser un número positivo");
+            }
+            
+            using (var connection = new NpgsqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new NpgsqlCommand(@"CALL eliminar_curso(@idCurso)", connection))
+                {
+
+                    command.Parameters.AddWithValue("idCurso", idCurso);
+
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                    }
+                    catch (PostgresException ex)
+                    {
+                       throw new ArgumentException(ex.MessageText);
+                    }
+                    catch (Exception ex)
+                    {
+                       throw new InvalidOperationException($"Error al eliminar el curso: {ex.Message}");
+                    }
+                }
+            }
+
+            return true;
+        }
     }
 }
