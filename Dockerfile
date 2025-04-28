@@ -7,11 +7,11 @@ COPY ["MyPortalStudent.csproj", "."]
 RUN dotnet restore "MyPortalStudent.csproj"
 
 # Copiar todo el código fuente y compilar en modo Release
-COPY . .
+COPY . . 
 RUN dotnet build "MyPortalStudent.csproj" -c Release -o /app/build
 
-# Publicar la aplicación
-RUN dotnet publish "MyPortalStudent.csproj" -c Release -o /app/publish
+# Publicar la aplicación para Linux x64 y con la opción --self-contained
+RUN dotnet publish "MyPortalStudent.csproj" -c Release -r linux-x64 --self-contained true -o /app/publish
 
 # Etapa 2: Imagen final para ejecución
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
