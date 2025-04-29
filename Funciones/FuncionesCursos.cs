@@ -816,6 +816,36 @@ namespace APIPostulaEnrolamiento.Funciones
             return pagosList;
         }
 
+        public async Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+
+            using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            using var cmd = new NpgsqlCommand("SELECT * FROM get_resumen_pagos_por_alumno(@id_alumno, @anio)", connection);
+            cmd.Parameters.AddWithValue("id_alumno", idAlumno);
+            cmd.Parameters.AddWithValue("anio", anio);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            var resumenList = new List<ResumenPagosDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                resumenList.Add(new ResumenPagosDTO
+                {
+                    IdAlumno = (int)reader["id_alumno"],
+                    PagosVencidos = (int)reader["cantidad_vencidos"],
+                    PagosPorVencer = (int)reader["cantidad_por_vencer"],
+                    PagosATiempo = (int)reader["cantidad_a_tiempo"],
+                    MontoTotalPendiente = (decimal)reader["monto_total_pendiente"]
+                });
+            }
+
+            return resumenList;
+        }
+
          public async Task<List<PagoDTO>> getPagosPorSede(SedePaginadoDTO sedePaginadoDto)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;

@@ -331,6 +331,32 @@ namespace MyPortalStudent.Controllers
             }
         }
 
+        [HttpGet("resumen-pagos-alumno/{id}/{anio}")]
+        public async Task<IActionResult> GetResumenPagosPorAlumno(int id, int anio)
+        {
+            try
+            {
+                var resumen = await _funcionesApi.GetResumenPagosPorAlumno(id, anio);
+
+                if (resumen == null)
+                    return NotFound(new { Success = false, Message = "No se encontró resumen de pagos para este alumno." });
+
+                return Ok(new { Success = true, Data = resumen });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { Success = false, Message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = ex.Message });
+            }
+        }
+
         [HttpGet("CalendarioAcademico/{anio}")]
         public async Task<IActionResult> GetCalendarioAcademico(int anio)
         {
