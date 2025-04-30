@@ -13,6 +13,7 @@ public interface IFuncionesApi
         Task<List<HorarioCursoxDocenteDTO>> getHorarioCursoxDocente(int idDocente);
         Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio);
         Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio);
+        Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio);
         Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio);
         Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria();
         Task<List<EventoDTO>> GetEventos();
@@ -27,5 +28,10 @@ public interface IFuncionesApi
         Task<Boolean> eliminarUsuarioAlumno(string numeroDocumento);
         Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto);
         Task<List<GradoDTO>> GetGrados();
+        Task<List<CursoListarDTO>> ListarCursosPorSede(SedePaginadoDTO listaCurso);
+        Task<List<CursoListarDTO>> FiltrarCurso(FiltroCursoDTO filtroCurso);
+        Task<Boolean> RegistrarCurso(CursoRegistrarDTO cursoRegistrarDto);
+        Task<Boolean> ActualizarCurso(CursoActualizarDTO cursoActualizarDto);
+        Task<Boolean> EliminarCurso(int idCurso);
     }
 }

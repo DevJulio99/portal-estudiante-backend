@@ -331,6 +331,32 @@ namespace MyPortalStudent.Controllers
             }
         }
 
+        [HttpGet("resumen-pagos-alumno/{id}/{anio}")]
+        public async Task<IActionResult> GetResumenPagosPorAlumno(int id, int anio)
+        {
+            try
+            {
+                var resumen = await _funcionesApi.GetResumenPagosPorAlumno(id, anio);
+
+                if (resumen == null)
+                    return NotFound(new { Success = false, Message = "No se encontró resumen de pagos para este alumno." });
+
+                return Ok(new { Success = true, Data = resumen });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { Success = false, Message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = ex.Message });
+            }
+        }
+
         [HttpGet("CalendarioAcademico/{anio}")]
         public async Task<IActionResult> GetCalendarioAcademico(int anio)
         {
@@ -688,6 +714,144 @@ namespace MyPortalStudent.Controllers
             catch (Exception ex)
             {
                 var error = new { Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPost("listar-cursos")]
+        public async Task<IActionResult> ListarCursos(SedePaginadoDTO listaCurso)
+        {
+            try
+            {
+                var cursos = await _funcionesApi.ListarCursosPorSede(listaCurso);
+
+                if (cursos == null || !cursos.Any())
+                {
+                    return NotFound($"No se encontraron cursos disponibles.");
+                }
+
+                var apiResult = new { Success = true, cursos.Count, Data = cursos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPost("filtrar-cursos")]
+        public async Task<IActionResult> ListarCursosPorSede(FiltroCursoDTO filtroCurso)
+        {
+            try
+            {
+                var cursos = await _funcionesApi.FiltrarCurso(filtroCurso);
+
+                if (cursos == null || cursos.Count == 0)
+                {
+                    return NotFound($"No se encontraron cursos.");
+                }
+
+                var apiResult = new { Success = true, cursos.Count, Data = cursos };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPost("registrar-curso")]
+        public async Task<IActionResult> RegistrarCurso(CursoRegistrarDTO cursoRegistrarDto)
+        {
+            try
+            {
+                var estado = await _funcionesApi.RegistrarCurso(cursoRegistrarDto);
+
+                var apiResult = new { Success = estado, Message = "Se registró el curso correctamente", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpPut("actualizar-curso")]
+        public async Task<IActionResult> ActualizarCurso(CursoActualizarDTO cursoActualizarDto)
+        {
+            try
+            {
+                var estado = await _funcionesApi.ActualizarCurso(cursoActualizarDto);
+
+                var apiResult = new { Success = estado, Message = "Se actualizó el curso correctamente", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return StatusCode(500, error);
+            }
+        }
+
+        [HttpDelete("eliminar-curso")]
+        public async Task<IActionResult> EliminarCurso(int idCurso)
+        {
+            try
+            {
+                var estado = await _funcionesApi.EliminarCurso(idCurso);
+
+                var apiResult = new { Success = true, Message = "Se eliminó el curso correctamente", Data = "" };
+                return Ok(apiResult);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex);
+            }
+            catch (ArgumentException ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
+                return BadRequest(error);
+            }
+            catch (Exception ex)
+            {
+                var error = new{ Success = false, Message = ex.Message, Data = "" };
                 return StatusCode(500, error);
             }
         }
