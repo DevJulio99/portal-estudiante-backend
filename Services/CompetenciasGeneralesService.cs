@@ -17,11 +17,11 @@ namespace MyPortalStudent.Services
             _configuration = configuration;
         }
 
-        public async Task<Boolean> ExamenAleatorio(GenerarExamenDTO request)
+        public async Task<int> ExamenAleatorio(GenerarExamenDTO request)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            List<int> competenciasExistentes = new List<int>();
             int rowAffected = 0;
+            int status = 0;
 
             if (request.idPostulante.Equals(0) || request.numeroPreguntas.Equals(0) || request.idCompetencia.Equals(0))
             {
@@ -46,21 +46,21 @@ namespace MyPortalStudent.Services
                  try
                  {
                      rowAffected = cmd.ExecuteNonQuery();
+                     status = 1;
                  }
                  catch (Exception ex)
                  {
-                    
-                
+                    var noQuestions = ex.Message.Contains(request.idCompetencia.ToString());
+
+                    if(noQuestions){
+                     status = 3;
+                    }
                  }
                 }
                 connection.Close();
             }
-            
 
-            
-            
-
-            return true;
+            return status;
         }
 
         public async Task<List<ExamenDTO>> listarExamen(int idPostulante, int idCompetencia)

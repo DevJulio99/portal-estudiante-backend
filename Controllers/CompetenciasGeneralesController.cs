@@ -2,6 +2,7 @@
 using MyPortalStudent.Domain.IServices;
 using Microsoft.AspNetCore.Mvc;
 using MyPortalStudent.Domain;
+using MyPortalStudent.Domain.DTOs;
 
 namespace MyPortalStudent.Controllers
 {
@@ -54,12 +55,26 @@ namespace MyPortalStudent.Controllers
 
             try
             {
-                await _service.ExamenAleatorio(request);
-                apiResult.Message = string.Format("Se creo con exito el examen", _controllerName);
-                return this.Ok(apiResult);
+                int status = await _service.ExamenAleatorio(request);
+                apiResult.Code = ConstantesPortal.ErrorRequest.code4004;
+                apiResult.Success = false;
+
+                if(status == 1){
+                    apiResult.Success = true;
+                    apiResult.Code = ConstantesPortal.Success.code20018;
+                    apiResult.Message = ConstantesPortal.Success.Message20018;
+                    return this.Ok(apiResult);
+                }
+                if(status == 3){
+                    apiResult.Code = ConstantesPortal.ErrorRequest.code40010;
+                    apiResult.Message = ConstantesPortal.ErrorRequest.Message40010;
+                }
+                return this.StatusCode(404, apiResult);
+               
             }
             catch (Exception ex)
             {
+                apiResult.Code = ConstantesPortal.ErrorInterno.code5000;
                 apiResult.Success = false;
                 apiResult.Message = ex.Message;
                 return this.StatusCode(500, apiResult);
