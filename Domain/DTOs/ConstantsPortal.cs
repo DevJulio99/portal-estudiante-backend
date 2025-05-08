@@ -32,6 +32,8 @@ namespace MyPortalStudent.Domain.DTOs
 
             public const string code20017 = "PS-EVAL-20017";
             public const string Message20017 = "Se cerró sesión correctamente";
+            public const string code20018 = "PS-EVAL-20018";
+            public const string Message20018 = "Se genero el examen con exito";
         }
 
         public struct ErrorRequest
@@ -50,6 +52,8 @@ namespace MyPortalStudent.Domain.DTOs
             public static string Message4006 { get; } = "Permiso Denegado. El usuario no tiene acceso a esta información.";
             public static string code4009 { get; } = "PS-EVAL-4009";
             public static string Message4009 { get; } = "Conflicto";
+            public const string code40010 = "PS-EVAL-40010";
+            public const string Message40010 = "No hay preguntas disponibles actualmente para este examen.";
 
             
         }
