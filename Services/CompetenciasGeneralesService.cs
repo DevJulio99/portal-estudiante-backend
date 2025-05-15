@@ -803,6 +803,10 @@ namespace MyPortalStudent.Services
                 int puntaje = 0;
                 double puntajeTotalFinal = total * puntajePregunta;
 
+                decimal porcentajeCorrecto = correctos * 100 / total;
+                decimal porcentajeIncorrecto = incorrectos * 100 / total;
+                decimal porcentajeBlanco = enblanco * 100 / total;
+
                 if (total > 0 && puntajeTotalFinal == 100)
                 {
                     puntaje = (int)((double)correctos * puntajePregunta);
@@ -835,7 +839,10 @@ namespace MyPortalStudent.Services
                     correctas = correctos,
                     incorrectas = incorrectos,
                     enblanco = enblanco,
-                    puntaje = puntaje
+                    puntaje = puntaje,
+                    porcentajeCorrecto = porcentajeCorrecto,
+                    porcentajeIncorrecto = porcentajeIncorrecto,
+                    porcentajeBlanco = porcentajeBlanco
                 });
             }
 

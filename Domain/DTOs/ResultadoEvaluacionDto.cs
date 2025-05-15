@@ -10,5 +10,8 @@ namespace MyPortalStudent.Domain
         public int incorrectas { get; set; }
         public int enblanco { get; set; }
         public int puntaje { get; set; }
+        public Decimal porcentajeCorrecto { get; set; }
+        public Decimal porcentajeIncorrecto { get; set; }
+        public Decimal porcentajeBlanco { get; set; }
     }
 }
