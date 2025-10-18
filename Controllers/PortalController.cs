@@ -20,840 +20,337 @@ namespace MyPortalStudent.Controllers
         [HttpGet("Alumnos")]
         public async Task<ActionResult> GetAlumnos()
         {
-            try
-            {
-                var data = await _funcionesApi.getAlumnos();
-                var apiResult = new { Success = true, Data = data };
-                return Ok(apiResult);
-            }
-            catch (Exception ex)
-            {
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(ex);
-                    case ArgumentException _:
-                        return BadRequest(ex);
-                    default:
-                        return StatusCode(500, ex);
-                }
-            }
+            var data = await _funcionesApi.getAlumnos();
+            var apiResult = new ApiResponse<List<AlumnoDTO>>{ Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("AlumnosxId/{numDocUsuario}")]
         public async Task<ActionResult> GetAlumnosId(string? numDocUsuario)
         {
-            try
+            var data = await _funcionesApi.getAlumnosId(numDocUsuario);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getAlumnosId(numDocUsuario);
-                var apiResult = new ApiResponse<List<PerfilDTO>> { Success = true, Message = "Se encontro alumno", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<PerfilDTO>> { Success = false, Message = "No se encontro alumno", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<PerfilDTO>> { Success = false, Message = "No se encontro alumno", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<PerfilDTO>> { Success = true, Message = "Se encontro alumno", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("HorarioxId/{idAlum}/{fechaInicio}/{fechaFin}")]
         public async Task<ActionResult> GetHorarioId(int idAlum, string fechaInicio, string fechaFin)
         {
-            try
+            var data = await _funcionesApi.getHorarioId(idAlum, fechaInicio, fechaFin);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getHorarioId(idAlum, fechaInicio, fechaFin);
-                var apiResult = new ApiResponse<List<HorarioResponse>> { Success = true, Message = "Se encontro horario", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<HorarioResponse>> { Success = false, Message = "No se encontro horario", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<HorarioResponse>> { Success = false, Message = "No se encontro horario", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<HorarioResponse>> { Success = true, Message = "Se encontro horario", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("CursosxId/{idAlum}")]
         public async Task<ActionResult> GetCursos(int idAlum)
         {
-            try
+            var data = await _funcionesApi.getCursos(idAlum);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getCursos(idAlum);
-                var apiResult = new ApiResponse<List<CursoDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<CursoDTO>> { Success = false, Message = "No se encontro cursos", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<CursoDTO>> { Success = false, Message = "No se encontro cursos", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<CursoDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
+            return Ok(apiResult);
         }
 
 
         [HttpGet("CursosColegioxId/{idAlum}/{anio}")]
         public async Task<ActionResult> GetCursosColegio(int idAlum, int anio)
         {
-            try
+            var data = await _funcionesApi.getCursosColegio(idAlum, anio);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getCursosColegio(idAlum, anio);
-                var apiResult = new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = false, Message = "No se encontro cursos", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = false, Message = "No se encontro cursos", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = true, Message = "Se encontro cursos", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("Asistencias/{idAlum}/{bimester}/{codCurso}/{anio}")]
         public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string bimester, string codCurso, int anio)
         {
-            try
+            var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, codCurso, anio);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, codCurso, anio);
-                var apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = true, Message = "Se encontro asistencias", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = false, Message = "No se encontro asistencias", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = false, Message = "No se encontro asistencias", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = true, Message = "Se encontro asistencias", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("HorariosxAula/{idAula}")]
         public async Task<ActionResult> GetAsistenciaAlumno(int idAula)
         {
-            try
+            var data = await _funcionesApi.getHorariosxAula(idAula);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getHorariosxAula(idAula);
-                var apiResult = new ApiResponse<List<HorarioxAulaDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<HorarioxAulaDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<HorarioxAulaDTO>> { Success = false, Message = "No se encontro horarios", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<HorarioxAulaDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("HorariosCursosxAlumno/{idAlumno}")]
         public async Task<ActionResult> GetHorariosCursoxAlumno(int idAlumno)
         {
-            try
+            var data = await _funcionesApi.getHorariosCursoxAlumno(idAlumno);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getHorariosCursoxAlumno(idAlumno);
-                var apiResult = new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = false, Message = "No se encontro horarios", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<HorarioCursoxAlumnnoDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("HorariosCursosxDocente/{idDocente}")]
         public async Task<ActionResult> GetHorariosCursoxDocente(int idDocente)
         {
-            try
+            var data = await _funcionesApi.getHorarioCursoxDocente(idDocente);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getHorarioCursoxDocente(idDocente);
-                var apiResult = new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = false, Message = "No se encontro horarios", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = false, Message = "No se encontro horarios", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<HorarioCursoxDocenteDTO>> { Success = true, Message = "Se encontro horarios", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("NotasxBimestre/{idAlum}/{tipoPeriodo}/{anio}")]
         public async Task<ActionResult> GetNotasxBimestre(int idAlum, string tipoPeriodo, int anio)
         {
-            try
+            var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio);
+            if (data.Count == 0)
             {
-                var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio);
-                var apiResult = new ApiResponse<List<NotasxBimestreDTO>> { Success = true, Message = "Se encontro notas", Data = data };
-                if (data.Count == 0)
-                {
-                    apiResult = new ApiResponse<List<NotasxBimestreDTO>> { Success = false, Message = "No se encontro notas", Data = [] };
-                    return NotFound(apiResult);
-                }
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<List<NotasxBimestreDTO>> { Success = false, Message = "No se encontro notas", Data = [] });
             }
-            catch (Exception ex)
-            {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
-            }
+            var apiResult = new ApiResponse<List<NotasxBimestreDTO>> { Success = true, Message = "Se encontro notas", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("alumno/{id}/{anio}")]
         public async Task<IActionResult> GetPagosPorAlumno(int id, int anio)
         {
-            try
+            var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);
+            
+            if (pagos == null || pagos.Count == 0)
             {
-                var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);
-                
-                if (pagos == null || pagos.Count == 0)
-                {
-                    return NotFound("No se encontraron pagos para este alumno.");
-                }
-                
-                var apiResult = new { Success = true, Data = pagos };
-                return Ok(apiResult);
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron pagos para este alumno." });
             }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            
+            return Ok(new ApiResponse<List<PagoDTO>> { Data = pagos, Message = "Pagos encontrados" });
         }
 
         [HttpGet("resumen-pagos-alumno/{id}/{anio}")]
         public async Task<IActionResult> GetResumenPagosPorAlumno(int id, int anio)
         {
-            try
-            {
-                var resumen = await _funcionesApi.GetResumenPagosPorAlumno(id, anio);
+            var resumen = await _funcionesApi.GetResumenPagosPorAlumno(id, anio);
 
-                if (resumen == null)
-                    return NotFound(new { Success = false, Message = "No se encontró resumen de pagos para este alumno." });
+            if (resumen == null || !resumen.Any())
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontró resumen de pagos para este alumno." });
 
-                return Ok(new { Success = true, Data = resumen });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { Success = false, Message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { Success = false, Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Success = false, Message = ex.Message });
-            }
+            return Ok(new ApiResponse<List<ResumenPagosDTO?>> { Data = resumen, Message = "Resumen de pagos encontrado" });
         }
 
         [HttpGet("CalendarioAcademico/{anio}")]
         public async Task<IActionResult> GetCalendarioAcademico(int anio)
         {
-            try
-            {
-                var calendario = await _funcionesApi.GetCalendarioAcademico(anio);
+            var calendario = await _funcionesApi.GetCalendarioAcademico(anio);
 
-                if (calendario == null || calendario.Count == 0)
-                {
-                    return NotFound($"No se encontraron actividades para el año {anio}.");
-                }
+            if (calendario == null || calendario.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = $"No se encontraron actividades para el año {anio}." });
+            }
 
-                var apiResult = new { Success = true, Data = calendario };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            return Ok(new ApiResponse<List<CalendarioAcademicoDTO>> { Data = calendario, Message = "Calendario académico encontrado" });
         }
 
         [HttpGet("DocumentosConCategoria")]
         public async Task<ActionResult> GetDocumentosConCategoria()
         {
-            try
-            {
-                var data = await _funcionesApi.GetDocumentosConCategoria();
-                var apiResult = new ApiResponse<List<CategoriaDocumentoDTO>> { Success = true, Message = "Se encontraron documentos", Data = data };
+            var data = await _funcionesApi.GetDocumentosConCategoria();
 
-                if (data == null || !data.Any())
-                {
-                    apiResult = new ApiResponse<List<CategoriaDocumentoDTO>> { Success = false, Message = "No se encontraron documentos", Data = new List<CategoriaDocumentoDTO>() };
-                    return NotFound(apiResult);
-                }
-
-                return Ok(apiResult);
-            }
-            catch (Exception ex)
+            if (data == null || !data.Any())
             {
-                var errResponse = new { Success = false, Message = ex.Message, Data = "" };
-                switch (ex)
-                {
-                    case UnauthorizedAccessException _:
-                        return Unauthorized(errResponse);
-                    case ArgumentException _:
-                        return BadRequest(errResponse);
-                    default:
-                        return StatusCode(500, errResponse);
-                }
+                return NotFound(new ApiResponse<List<CategoriaDocumentoDTO>> { Success = false, Message = "No se encontraron documentos", Data = [] });
             }
+
+            var apiResult = new ApiResponse<List<CategoriaDocumentoDTO>> { Success = true, Message = "Se encontraron documentos", Data = data };
+            return Ok(apiResult);
         }
 
         [HttpGet("ObtenerEventos")]
         public async Task<IActionResult> ObtenerEventos()
         {
-            try
-            {
-                var eventos = await _funcionesApi.GetEventos();
+            var eventos = await _funcionesApi.GetEventos();
 
-                if (eventos == null || eventos.Count == 0)
-                {
-                    return NotFound($"No se encontraron eventos.");
-                }
+            if (eventos == null || eventos.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron eventos." });
+            }
 
-                var apiResult = new { Success = true, eventos.Count, Data = eventos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            return Ok(new ApiResponse<List<EventoDTO>> { Data = eventos, Message = "Eventos encontrados" });
         }
     
         [HttpGet("ObtenerObligacionesPagadas/{idAlumno}")]
         public async Task<IActionResult> ObtenerObligacionesPagadas(int idAlumno)
         {
-            try
-            {
-                var obligaciones = await _funcionesApi.GetObligacionesPagadas(idAlumno);
+            var obligaciones = await _funcionesApi.GetObligacionesPagadas(idAlumno);
 
-                if (obligaciones == null || obligaciones.Count == 0)
-                {
-                    return NotFound($"No se encontraron obligaciones pagadas para el alumno con ID {idAlumno}.");
-                }
+            if (obligaciones == null || obligaciones.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = $"No se encontraron obligaciones pagadas para el alumno con ID {idAlumno}." });
+            }
 
-                var apiResult = new { Success = true, obligaciones.Count, Data = obligaciones };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            return Ok(new ApiResponse<List<ObligacionPorPeriodoDTO>> { Data = obligaciones, Message = "Obligaciones encontradas" });
         }
 
         [HttpPost("registrar-imagen-pago")]
         public async Task<IActionResult> RegistrarImagenPago(ImagenPagoDto imagenPagoDto)
         {
-            try
-            {
-                var status = await _funcionesApi.setImagenPago(imagenPagoDto);
-                var apiResult = new { Success = status,Message = "Se registro imagen", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            var status = await _funcionesApi.setImagenPago(imagenPagoDto);
+            var apiResult = new ApiResponse<object> { Success = status, Message = "Se registro imagen" };
+            return Ok(apiResult);
         }
 
         [HttpPost("listar-pago-sede")]
         public async Task<IActionResult> ListarPagosPorSede(SedePaginadoDTO sedePaginadoDto)
         {
-            try
-            {
-                var pagos = await _funcionesApi.getPagosPorSede(sedePaginadoDto);
+            var pagos = await _funcionesApi.getPagosPorSede(sedePaginadoDto);
 
-                if (pagos == null || pagos.Count == 0)
-                {
-                    return NotFound($"No se encontraron pagos para la sede ingresada.");
-                }
+            if (pagos == null || pagos.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron pagos para la sede ingresada." });
+            }
 
-                var apiResult = new { Success = true, pagos.Count, Data = pagos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            return Ok(new ApiResponse<List<PagoDTO>> { Data = pagos, Message = "Pagos encontrados" });
         }
 
         [HttpPost("listar-alumno-sede")]
         public async Task<IActionResult> ListarAlumnosPorSede(SedePaginadoDTO listaAlumno)
         {
-            try
-            {
-                var alumnos = await _funcionesApi.getAlumnoPorSede(listaAlumno);
+            var alumnos = await _funcionesApi.getAlumnoPorSede(listaAlumno);
 
-                if (alumnos == null || alumnos.Count == 0)
-                {
-                    return NotFound($"No se encontraron alumnos para la sede ingresada.");
-                }
+            if (alumnos == null || alumnos.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron alumnos para la sede ingresada." });
+            }
 
-                var apiResult = new { Success = true, alumnos.Count, Data = alumnos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            return Ok(new ApiResponse<List<AlumnoDTO>> { Data = alumnos, Message = "Alumnos encontrados" });
         }
 
         [HttpPost("filtrar-alumno-sede")]
         public async Task<IActionResult> ListarAlumnosPorSede(FiltroAlumnoDTO filtroAlumno)
         {
-            try
-            {
-                var alumnos = await _funcionesApi.filtrarAlumno(filtroAlumno);
+            var alumnos = await _funcionesApi.filtrarAlumno(filtroAlumno);
 
-                if (alumnos == null || alumnos.Count == 0)
-                {
-                    return NotFound($"No se encontraron alumnos.");
-                }
+            if (alumnos == null || alumnos.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron alumnos." });
+            }
 
-                var apiResult = new { Success = true, alumnos.Count, Data = alumnos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            return Ok(new ApiResponse<List<AlumnoDTO>> { Data = alumnos, Message = "Alumnos encontrados" });
         }
 
         [HttpPost("registrar-usuario-alumno")]
         public async Task<IActionResult> RegistrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-            try
-            {
-                var estado = await _funcionesApi.registrarUsuarioAlumno(alumnoRegistrarDto);
-
-                var apiResult = new { Success = estado, Message = "Se registro usuario", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.registrarUsuarioAlumno(alumnoRegistrarDto);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se registro usuario" };
+            return Ok(apiResult);
         }
 
         [HttpPut("actualizar-usuario-alumno")]
         public async Task<IActionResult> ActualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-            try
-            {
-                var estado = await _funcionesApi.actualizarUsuarioAlumno(alumnoRegistrarDto);
-
-                var apiResult = new { Success = true, Message = "Se actualizo usuario", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.actualizarUsuarioAlumno(alumnoRegistrarDto);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se actualizo usuario" };
+            return Ok(apiResult);
         }
 
         [HttpDelete("eliminar-usuario-alumno")]
         public async Task<IActionResult> EliminarUsuarioAlumno(string numeroDocumento)
         {
-            try
-            {
-                var estado = await _funcionesApi.eliminarUsuarioAlumno(numeroDocumento);
-
-                var apiResult = new { Success = true, Message = "Se elimino usuario", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.eliminarUsuarioAlumno(numeroDocumento);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se elimino usuario" };
+            return Ok(apiResult);
         }
 
         [HttpPost("agregar-documento")]
         public async Task<IActionResult> AgregarDocumento(DocumentoAddDTO documentoAddDto)
         {
-            try
-            {
-                var status = await _funcionesApi.AddDocument(documentoAddDto);
-                var apiResult = new { Success = status, Message = "Documento agregado correctamente", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex);
-            }
+            var status = await _funcionesApi.AddDocument(documentoAddDto);
+            var apiResult = new ApiResponse<object> { Success = status, Message = "Documento agregado correctamente" };
+            return Ok(apiResult);
         }
 
         [HttpGet("listar-grados")]
         public async Task<IActionResult> ListarGrados()
         {
-            try
-            {
-                var grados = await _funcionesApi.GetGrados();
+            var grados = await _funcionesApi.GetGrados();
 
-                if (grados == null || grados.Count == 0)
-                {
-                    return NotFound("No se encontraron grados registrados.");
-                }
+            if (grados == null || grados.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron grados registrados." });
+            }
 
-                var apiResult = new { Success = true, Count = grados.Count, Data = grados };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                var error = new { Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            return Ok(new ApiResponse<List<GradoDTO>> { Data = grados, Message = "Grados encontrados" });
         }
 
         [HttpPost("listar-cursos")]
         public async Task<IActionResult> ListarCursos(SedePaginadoDTO listaCurso)
         {
-            try
-            {
-                var cursos = await _funcionesApi.ListarCursosPorSede(listaCurso);
+            var cursos = await _funcionesApi.ListarCursosPorSede(listaCurso);
 
-                if (cursos == null || !cursos.Any())
-                {
-                    return NotFound($"No se encontraron cursos disponibles.");
-                }
+            if (cursos == null || !cursos.Any())
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron cursos disponibles." });
+            }
 
-                var apiResult = new { Success = true, cursos.Count, Data = cursos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            return Ok(new ApiResponse<List<CursoListarDTO>> { Data = cursos, Message = "Cursos encontrados" });
         }
 
         [HttpPost("filtrar-cursos")]
         public async Task<IActionResult> ListarCursosPorSede(FiltroCursoDTO filtroCurso)
         {
-            try
-            {
-                var cursos = await _funcionesApi.FiltrarCurso(filtroCurso);
+            var cursos = await _funcionesApi.FiltrarCurso(filtroCurso);
 
-                if (cursos == null || cursos.Count == 0)
-                {
-                    return NotFound($"No se encontraron cursos.");
-                }
+            if (cursos == null || cursos.Count == 0)
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron cursos." });
+            }
 
-                var apiResult = new { Success = true, cursos.Count, Data = cursos };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            return Ok(new ApiResponse<List<CursoListarDTO>> { Data = cursos, Message = "Cursos encontrados" });
         }
 
         [HttpPost("registrar-curso")]
         public async Task<IActionResult> RegistrarCurso(CursoRegistrarDTO cursoRegistrarDto)
         {
-            try
-            {
-                var estado = await _funcionesApi.RegistrarCurso(cursoRegistrarDto);
-
-                var apiResult = new { Success = estado, Message = "Se registró el curso correctamente", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.RegistrarCurso(cursoRegistrarDto);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se registró el curso correctamente" };
+            return Ok(apiResult);
         }
 
         [HttpPut("actualizar-curso")]
         public async Task<IActionResult> ActualizarCurso(CursoActualizarDTO cursoActualizarDto)
         {
-            try
-            {
-                var estado = await _funcionesApi.ActualizarCurso(cursoActualizarDto);
-
-                var apiResult = new { Success = estado, Message = "Se actualizó el curso correctamente", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.ActualizarCurso(cursoActualizarDto);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se actualizó el curso correctamente" };
+            return Ok(apiResult);
         }
 
         [HttpDelete("eliminar-curso")]
         public async Task<IActionResult> EliminarCurso(int idCurso)
         {
-            try
-            {
-                var estado = await _funcionesApi.EliminarCurso(idCurso);
-
-                var apiResult = new { Success = true, Message = "Se eliminó el curso correctamente", Data = "" };
-                return Ok(apiResult);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex);
-            }
-            catch (ArgumentException ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return BadRequest(error);
-            }
-            catch (Exception ex)
-            {
-                var error = new{ Success = false, Message = ex.Message, Data = "" };
-                return StatusCode(500, error);
-            }
+            var estado = await _funcionesApi.EliminarCurso(idCurso);
+            var apiResult = new ApiResponse<object> { Success = estado, Message = "Se eliminó el curso correctamente" };
+            return Ok(apiResult);
         }
     }
 }

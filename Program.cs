@@ -82,6 +82,8 @@ builder.Services.AddScoped<ICompetenciasGeneralesService, CompetenciasGeneralesS
 
 var app = builder.Build();
 
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 app.UseCors("validarConsumo");
 app.UseRateLimiter();
 
