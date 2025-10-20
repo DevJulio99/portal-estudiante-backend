@@ -62,10 +62,10 @@ namespace MyPortalStudent.Controllers
         }
 
 
-        [HttpGet("CursosColegioxId/{idAlum}/{anio}")]
-        public async Task<ActionResult> GetCursosColegio(int idAlum, int anio)
+        [HttpGet("CursosColegioxId/{idAlum}/{anio}/{codPeriodo}")]
+        public async Task<ActionResult> GetCursosColegio(int idAlum, int anio, string codPeriodo)
         {
-            var data = await _funcionesApi.getCursosColegio(idAlum, anio);
+            var data = await _funcionesApi.getCursosColegio(idAlum, anio, codPeriodo);
             if (data.Count == 0)
             {
                 return NotFound(new ApiResponse<List<ReporteMatriculaColegioDTO>> { Success = false, Message = "No se encontro cursos", Data = [] });
@@ -122,10 +122,10 @@ namespace MyPortalStudent.Controllers
             return Ok(apiResult);
         }
 
-        [HttpGet("NotasxBimestre/{idAlum}/{tipoPeriodo}/{anio}")]
-        public async Task<ActionResult> GetNotasxBimestre(int idAlum, string tipoPeriodo, int anio)
+        [HttpGet("NotasxBimestre/{idAlum}/{tipoPeriodo}/{anio}/{codCurso}/{codPeriodo}")]
+        public async Task<ActionResult> GetNotasxBimestre(int idAlum, string tipoPeriodo, int anio, string codCurso, string codPeriodo)
         {
-            var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio);
+            var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio, codCurso, codPeriodo);
             if (data.Count == 0)
             {
                 return NotFound(new ApiResponse<List<NotasxBimestreDTO>> { Success = false, Message = "No se encontro notas", Data = [] });

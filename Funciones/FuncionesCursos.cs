@@ -82,8 +82,12 @@ namespace APIPostulaEnrolamiento.Funciones
                     telefono,
                     direccion,
                     nombre || ' ' || apellido_paterno || ' ' || apellido_materno AS FullName,
-                    correo AS CorreoPersonal
+                    correo AS CorreoPersonal,
+                    codigo_periodo AS codPeriodoActual
                 FROM alumno
+                LEFT JOIN 
+                PeriodoAcademico p ON CURRENT_DATE BETWEEN
+	            p.fecha_inicio AND p.fecha_fin AND p.tipo_periodo = 'Bimestre'
                 WHERE dni = @NumDocUsuario";
 
             var alumnos = await connection.QueryAsync<PerfilDTO>(sql, new { NumDocUsuario = numDocUsuario });
@@ -359,13 +363,14 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaHorario;
         }
 
-        public async Task<List<ReporteMatriculaColegioDTO>> getCursosColegio(int idAlum, int anio)
+        public async Task<List<ReporteMatriculaColegioDTO>> getCursosColegio(int idAlum, int anio, string codPeriodo)
         {
             var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             await using var connection = new NpgsqlConnection(connectionString);
 
-            const string sql = "SELECT * FROM public.obtener_reporte_matricula_colegio(@IdAlum, @Anio)";
-            var queryResult = await connection.QueryAsync(sql, new { IdAlum = idAlum, Anio = anio });
+            //const string sql = "SELECT * FROM public.obtener_reporte_matricula_colegio(@IdAlum, @Anio)";
+            const string sql = "SELECT * FROM public.obtener_reporte_matricula_colegio_periodo(@IdAlum, @Anio, @CodPeriodo)";
+            var queryResult = await connection.QueryAsync(sql, new { IdAlum = idAlum, Anio = anio, CodPeriodo = codPeriodo});
 
             var listaReporteColegio = new List<ReporteMatriculaColegioDTO>([]);
 
@@ -391,13 +396,14 @@ namespace APIPostulaEnrolamiento.Funciones
 
                 if(actualBimestre){
                    listaReporteColegio.Add(new ReporteMatriculaColegioDTO {
-                    modalidad = "Presencial",
-                    codCurso = codCurso ?? "",
-                    descCurso = reader.cursos_matriculados,
-                    periodo = reader.periodo_academico,
-                    salon = "",
-                    seccion = reader.seccion,
-                    docente = [
+                       modalidad = "Presencial",
+                       codCurso = codCurso ?? "",
+                       descCurso = reader.cursos_matriculados,
+                       codigoPeriodoAcademico = reader.codigo_periodo,
+                       periodo = reader.periodo_academico,
+                       salon = "",
+                       seccion = reader.seccion,
+                       docente = [
                        new DocenteCursoDTO {
                            nombresDocentes = reader.docente_nombre,
                            apellidoPaternoDocente = "",
@@ -408,20 +414,20 @@ namespace APIPostulaEnrolamiento.Funciones
                            codUsuarioDocente = ""
                        }
                     ],
-                    ciclo = "",
-                    creditos = "",
-                    cantidadVeces = "0",
-                    inasistencias = inasistencias,
-                    statusCurso = "Iniciado",
-                    orden = 1,
-                    notaFinal = 0,
-                    tieneHorario = false,
-                    grado = reader.grado,
-                    nivel = reader.nivel,
-                    periodoAcademico = reader.periodo_academico,
-                    fechaInicio = fechaInicioString,
-                    fechaFin = fechaFinString,       
-                });
+                       ciclo = "",
+                       creditos = "",
+                       cantidadVeces = "0",
+                       inasistencias = inasistencias,
+                       statusCurso = "Iniciado",
+                       orden = 1,
+                       notaFinal = reader.nota_promedio_final,
+                       tieneHorario = false,
+                       grado = reader.grado,
+                       nivel = reader.nivel,
+                       periodoAcademico = reader.periodo_academico,
+                       fechaInicio = fechaInicioString,
+                       fechaFin = fechaFinString,
+                   });
                 }
                 
             }
@@ -545,7 +551,7 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaHorarios;
         }
 
-        public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio)
+        public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio, string codCurso, string codPeriodo)
         {
             var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             await using var connection = new NpgsqlConnection(connectionString);
@@ -555,15 +561,15 @@ namespace APIPostulaEnrolamiento.Funciones
                     alumno,
                     apellido_paterno AS ApellidoPaterno,
                     apellido_materno AS ApellidoMaterno,
-                    codigo_curso as codigoCurso,
+                    cod_curso as codigoCurso,
                     descripcion_curso AS DescripcionCurso,
-                    codigo_periodo AS CodigoPeriodo,
+                    cod_periodo AS CodigoPeriodo,
                     descripcion_periodo AS DescripcionPeriodo,
                     nota,
                     peso,
                     tipo_nota AS TipoNota
-                FROM obtener_notas_por_bimestre(@IdAlum, @TipoPeriodo, @Anio)";
-            var parameters = new { IdAlum = idAlum, TipoPeriodo = tipoPeriodo, Anio = anio };
+                FROM obtener_notas_por_curso_periodo(@IdAlum, @TipoPeriodo, @Anio, @CodCurso, @CodPeriodo)";
+            var parameters = new { IdAlum = idAlum, TipoPeriodo = tipoPeriodo, Anio = anio, CodCurso = codCurso, CodPeriodo = codPeriodo};
             
             var notas = await connection.QueryAsync<NotasxBimestreDTO>(sql, parameters);
             return notas.AsList();

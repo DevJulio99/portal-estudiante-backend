@@ -15,8 +15,9 @@ namespace MyPortalStudent.Domain
         public required string inasistencias { get; set; }
         public required string statusCurso { get; set; }
         public required int orden { get; set; }
-        public required int notaFinal { get; set; }
+        public required float notaFinal { get; set; }
         public required Boolean tieneHorario { get; set; }
+        public string codigoPeriodoAcademico { get; set; }
         public string periodoAcademico { get; set; }
         public string grado { get; set; }
         public string nivel { get; set; }
