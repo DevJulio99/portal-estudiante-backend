@@ -13,6 +13,8 @@ namespace APIPostulaEnrolamiento.Funciones
         public FuncionesCursos(IConfiguration configuration)
         {
             _configuration = configuration;
+            // Configura Dapper para mapear snake_case (e.g., id_pago) a PascalCase (e.g., IdPago)
+            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         }
 
          public async Task<List<AlumnoDTO>> getAlumnos()
@@ -553,6 +555,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     alumno,
                     apellido_paterno AS ApellidoPaterno,
                     apellido_materno AS ApellidoMaterno,
+                    codigo_curso as codigoCurso,
                     descripcion_curso AS DescripcionCurso,
                     codigo_periodo AS CodigoPeriodo,
                     descripcion_periodo AS DescripcionPeriodo,
@@ -568,38 +571,16 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            await using var connection = new NpgsqlConnection(connectionString);
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
-
-            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM get_pagos_por_alumno(@id_alumno, @anio)", connection);
-            cmd.Parameters.AddWithValue("id_alumno", idAlumno);
-            cmd.Parameters.AddWithValue("anio", anio);
-
-
-            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            const string sql = "SELECT * FROM get_pagos_por_alumno(@IdAlumno, @Anio)";
             
-            var pagosList = new List<PagoDTO>();
+            // Dapper mapeará automáticamente las columnas a las propiedades del DTO.
+            // id_pago -> IdPago, documento_pago -> DocumentoPago, f_vencimiento -> FechaVencimiento, etc.
+            var pagos = await connection.QueryAsync<PagoDTO>(sql, new { IdAlumno = idAlumno, Anio = anio });
 
-            while (await reader.ReadAsync())
-            {
-                pagosList.Add(new PagoDTO
-                {
-                    IdPago = (int)reader["id_pago"],
-                    DocumentoPago = reader["documento_pago"].ToString() ?? "",
-                    FechaVencimiento = (DateTime)reader["f_vencimiento"],
-                    Ciclo = reader["ciclo"].ToString() ?? "",
-                    Saldo = (decimal)reader["saldo"],
-                    Mora = (decimal)reader["mora"],
-                    TotalAPagar = (decimal)reader["total_a_pagar"],
-                    Detalle = reader["detalle"].ToString() ?? "",
-                    Imagen = reader["imagen"].ToString() ?? "",
-                    Anio = (int)reader["anio"]
-                });
-            }
-
-            return pagosList;
+            return pagos.AsList();
         }
 
         public async Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio)

@@ -134,7 +134,7 @@ namespace MyPortalStudent.Controllers
             return Ok(apiResult);
         }
 
-        [HttpGet("alumno/{id}/{anio}")]
+        [HttpGet("alumno/pagos-pendientes/{id}/{anio}")]
         public async Task<IActionResult> GetPagosPorAlumno(int id, int anio)
         {
             var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);

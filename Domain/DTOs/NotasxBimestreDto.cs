@@ -5,6 +5,7 @@ namespace MyPortalStudent.Domain
         public required string alumno { get; set; }
         public required string apellidoPaterno { get; set; }
         public required string apellidoMaterno { get; set; }
+        public required string codigoCurso { get; set; }
         public required string descripcionCurso { get; set; }
         public required string codigoPeriodo { get; set; }
         public required string descripcionPeriodo { get; set; }
