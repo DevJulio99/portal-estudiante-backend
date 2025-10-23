@@ -13,8 +13,6 @@ namespace APIPostulaEnrolamiento.Funciones
         public FuncionesCursos(IConfiguration configuration)
         {
             _configuration = configuration;
-            // Configura Dapper para mapear snake_case (e.g., id_pago) a PascalCase (e.g., IdPago)
-            Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         }
 
          public async Task<List<AlumnoDTO>> getAlumnos()
@@ -420,7 +418,7 @@ namespace APIPostulaEnrolamiento.Funciones
                        inasistencias = inasistencias,
                        statusCurso = "Iniciado",
                        orden = 1,
-                       notaFinal = reader.nota_promedio_final,
+                       notaFinal = reader.nota_promedio_final != null ? (float)reader.nota_promedio_final : 0.0f,
                        tieneHorario = false,
                        grado = reader.grado,
                        nivel = reader.nivel,

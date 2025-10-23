@@ -24,35 +24,25 @@ namespace MyPortalStudent.Controllers
         [HttpPost("realizar")]
         public async Task<ActionResult> RealizarMatricula([FromBody] MatriculaRegistrarDTO matriculaDto)
         {
-            try
+            var resultado = await _matriculaService.RealizarMatricula(matriculaDto);
+            
+            if (resultado.Success)
             {
-                var resultado = await _matriculaService.RealizarMatricula(matriculaDto);
-                
-                if (resultado.Success)
+                return Ok(new ApiResponse<MatriculaResponseDTO>
                 {
-                    return Ok(new ApiResponse<MatriculaResponseDTO>
-                    {
-                        Success = true,
-                        Message = resultado.Message,
-                        Data = resultado
-                    });
-                }
-                else
-                {
-                    return BadRequest(new ApiResponse<MatriculaResponseDTO>
-                    {
-                        Success = false,
-                        Message = resultado.Message,
-                        Data = resultado
-                    });
-                }
+                    Success = true,
+                    Message = resultado.Message,
+                    Data = resultado
+                });
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, new ApiResponse<object>
+                // Alineando con el patrón de PortalController de retornar Ok con Success = false para fallos de lógica de negocio
+                return Ok(new ApiResponse<MatriculaResponseDTO>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = resultado.Message,
+                    Data = resultado
                 });
             }
         }
@@ -66,35 +56,24 @@ namespace MyPortalStudent.Controllers
         [HttpGet("listar-por-periodo/{idPeriodo}")]
         public async Task<ActionResult> ListarMatriculasPorPeriodo(int idPeriodo, [FromQuery] string? codigoSede = null)
         {
-            try
+            var matriculas = await _matriculaService.ListarMatriculasPorPeriodo(idPeriodo, codigoSede);
+            
+            if (matriculas.Count == 0)
             {
-                var matriculas = await _matriculaService.ListarMatriculasPorPeriodo(idPeriodo, codigoSede);
-                
-                if (matriculas.Count == 0)
-                {
-                    return NotFound(new ApiResponse<List<MatriculaListarDTO>>
-                    {
-                        Success = false,
-                        Message = "No se encontraron matrículas para el período especificado",
-                        Data = []
-                    });
-                }
-
-                return Ok(new ApiResponse<List<MatriculaListarDTO>>
-                {
-                    Success = true,
-                    Message = "Matrículas encontradas",
-                    Data = matriculas
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
+                return NotFound(new ApiResponse<List<MatriculaListarDTO>>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se encontraron matrículas para el período especificado",
+                    Data = []
                 });
             }
+
+            return Ok(new ApiResponse<List<MatriculaListarDTO>>
+            {
+                Success = true,
+                Message = "Matrículas encontradas",
+                Data = matriculas
+            });
         }
 
         /// <summary>
@@ -105,34 +84,23 @@ namespace MyPortalStudent.Controllers
         [HttpGet("obtener/{idMatricula}")]
         public async Task<ActionResult> ObtenerMatriculaPorId(int idMatricula)
         {
-            try
+            var matricula = await _matriculaService.ObtenerMatriculaPorId(idMatricula);
+            
+            if (matricula == null)
             {
-                var matricula = await _matriculaService.ObtenerMatriculaPorId(idMatricula);
-                
-                if (matricula == null)
-                {
-                    return NotFound(new ApiResponse<MatriculaDTO>
-                    {
-                        Success = false,
-                        Message = "No se encontró la matrícula especificada"
-                    });
-                }
-
-                return Ok(new ApiResponse<MatriculaDTO>
-                {
-                    Success = true,
-                    Message = "Matrícula encontrada",
-                    Data = matricula
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
+                return NotFound(new ApiResponse<MatriculaDTO>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se encontró la matrícula especificada"
                 });
             }
+
+            return Ok(new ApiResponse<MatriculaDTO>
+            {
+                Success = true,
+                Message = "Matrícula encontrada",
+                Data = matricula
+            });
         }
 
         /// <summary>
@@ -143,35 +111,24 @@ namespace MyPortalStudent.Controllers
         [HttpGet("obtener-por-alumno/{idAlumno}")]
         public async Task<ActionResult> ObtenerMatriculasPorAlumno(int idAlumno)
         {
-            try
+            var matriculas = await _matriculaService.ObtenerMatriculasPorAlumno(idAlumno);
+            
+            if (matriculas.Count == 0)
             {
-                var matriculas = await _matriculaService.ObtenerMatriculasPorAlumno(idAlumno);
-                
-                if (matriculas.Count == 0)
-                {
-                    return NotFound(new ApiResponse<List<MatriculaDTO>>
-                    {
-                        Success = false,
-                        Message = "No se encontraron matrículas para el alumno especificado",
-                        Data = []
-                    });
-                }
-
-                return Ok(new ApiResponse<List<MatriculaDTO>>
-                {
-                    Success = true,
-                    Message = "Matrículas del alumno encontradas",
-                    Data = matriculas
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
+                return NotFound(new ApiResponse<List<MatriculaDTO>>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se encontraron matrículas para el alumno especificado",
+                    Data = []
                 });
             }
+
+            return Ok(new ApiResponse<List<MatriculaDTO>>
+            {
+                Success = true,
+                Message = "Matrículas del alumno encontradas",
+                Data = matriculas
+            });
         }
 
         /// <summary>
@@ -183,25 +140,14 @@ namespace MyPortalStudent.Controllers
         [HttpGet("verificar-matricula/{idAlumno}/{idPeriodo}")]
         public async Task<ActionResult> VerificarMatriculaAlumno(int idAlumno, int idPeriodo)
         {
-            try
+            var puedeMatricularse = await _matriculaService.VerificarMatriculaAlumno(idAlumno, idPeriodo);
+            
+            return Ok(new ApiResponse<bool>
             {
-                var puedeMatricularse = await _matriculaService.VerificarMatriculaAlumno(idAlumno, idPeriodo);
-                
-                return Ok(new ApiResponse<bool>
-                {
-                    Success = true,
-                    Message = puedeMatricularse ? "El alumno puede matricularse" : "El alumno ya tiene una matrícula activa para este período",
-                    Data = puedeMatricularse
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
-                });
-            }
+                Success = true, // La llamada a la API fue exitosa, el campo 'Data' indica el resultado de la lógica de negocio
+                Message = puedeMatricularse ? "El alumno puede matricularse" : "El alumno ya tiene una matrícula activa para este período",
+                Data = puedeMatricularse
+            });
         }
 
         /// <summary>
@@ -213,33 +159,23 @@ namespace MyPortalStudent.Controllers
         [HttpPut("actualizar-estado/{idMatricula}")]
         public async Task<ActionResult> ActualizarEstadoMatricula(int idMatricula, [FromBody] string nuevoEstado)
         {
-            try
+            var resultado = await _matriculaService.ActualizarEstadoMatricula(idMatricula, nuevoEstado);
+            
+            if (resultado)
             {
-                var resultado = await _matriculaService.ActualizarEstadoMatricula(idMatricula, nuevoEstado);
-                
-                if (resultado)
+                return Ok(new ApiResponse<object>
                 {
-                    return Ok(new ApiResponse<object>
-                    {
-                        Success = true,
-                        Message = "Estado de matrícula actualizado correctamente"
-                    });
-                }
-                else
-                {
-                    return BadRequest(new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = "No se pudo actualizar el estado de la matrícula"
-                    });
-                }
+                    Success = true,
+                    Message = "Estado de matrícula actualizado correctamente"
+                });
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, new ApiResponse<object>
+                // Alineando con el patrón de PortalController de retornar Ok con Success = false para fallos de lógica de negocio
+                return Ok(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se pudo actualizar el estado de la matrícula"
                 });
             }
         }
@@ -252,33 +188,23 @@ namespace MyPortalStudent.Controllers
         [HttpDelete("desactivar/{idMatricula}")]
         public async Task<ActionResult> DesactivarMatricula(int idMatricula)
         {
-            try
+            var resultado = await _matriculaService.DesactivarMatricula(idMatricula);
+            
+            if (resultado)
             {
-                var resultado = await _matriculaService.DesactivarMatricula(idMatricula);
-                
-                if (resultado)
+                return Ok(new ApiResponse<object>
                 {
-                    return Ok(new ApiResponse<object>
-                    {
-                        Success = true,
-                        Message = "Matrícula desactivada correctamente"
-                    });
-                }
-                else
-                {
-                    return BadRequest(new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = "No se pudo desactivar la matrícula"
-                    });
-                }
+                    Success = true,
+                    Message = "Matrícula desactivada correctamente"
+                });
             }
-            catch (Exception ex)
+            else
             {
-                return StatusCode(500, new ApiResponse<object>
+                // Alineando con el patrón de PortalController de retornar Ok con Success = false para fallos de lógica de negocio
+                return Ok(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se pudo desactivar la matrícula"
                 });
             }
         }
@@ -291,35 +217,41 @@ namespace MyPortalStudent.Controllers
         [HttpGet("obtener-por-sede/{codigoSede}")]
         public async Task<ActionResult> ObtenerMatriculasActivasPorSede(string codigoSede)
         {
-            try
+            var matriculas = await _matriculaService.ObtenerMatriculasActivasPorSede(codigoSede);
+            
+            if (matriculas.Count == 0)
             {
-                var matriculas = await _matriculaService.ObtenerMatriculasActivasPorSede(codigoSede);
-                
-                if (matriculas.Count == 0)
-                {
-                    return NotFound(new ApiResponse<List<MatriculaDTO>>
-                    {
-                        Success = false,
-                        Message = "No se encontraron matrículas activas para la sede especificada",
-                        Data = []
-                    });
-                }
-
-                return Ok(new ApiResponse<List<MatriculaDTO>>
-                {
-                    Success = true,
-                    Message = "Matrículas de la sede encontradas",
-                    Data = matriculas
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
+                return NotFound(new ApiResponse<List<MatriculaDTO>>
                 {
                     Success = false,
-                    Message = $"Error interno del servidor: {ex.Message}"
+                    Message = "No se encontraron matrículas activas para la sede especificada",
+                    Data = []
                 });
             }
+
+            return Ok(new ApiResponse<List<MatriculaDTO>>
+            {
+                Success = true,
+                Message = "Matrículas de la sede encontradas",
+                Data = matriculas
+            });
+        }
+
+        /// <summary>
+        /// Obtiene los períodos académicos disponibles para matrícula (activos y futuros).
+        /// </summary>
+        /// <returns>Una lista de períodos académicos.</returns>
+        [HttpGet("periodos-disponibles")]
+        public async Task<ActionResult> ListarPeriodosDisponibles()
+        {
+            var periodos = await _matriculaService.ListarPeriodosDisponiblesParaMatricula();
+
+            return Ok(new ApiResponse<List<PeriodoAcademicoDTO>>
+            {
+                Success = true,
+                Message = periodos.Any() ? "Períodos encontrados." : "No se encontraron períodos disponibles para matrícula.",
+                Data = periodos
+            });
         }
     }
 }

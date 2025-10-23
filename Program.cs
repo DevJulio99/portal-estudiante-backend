@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using APIPostulaEnrolamiento.Funciones;
 using JwtLoginService;
 using Microsoft.AspNetCore.Builder;
+using Dapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.OpenApi.Models;
@@ -14,6 +15,9 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddHostedService<Worker>();
 // Configurar el puerto para Railway
+
+// Configura Dapper para mapear automáticamente columnas con snake_case a propiedades en PascalCase
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 builder.WebHost.ConfigureKestrel(serverOptions => {
     serverOptions.ListenAnyIP(int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080"));
 });

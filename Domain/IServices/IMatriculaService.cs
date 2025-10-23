@@ -12,5 +12,6 @@ namespace MyPortalStudent.Domain.IServices
         Task<bool> ActualizarEstadoMatricula(int idMatricula, string nuevoEstado);
         Task<bool> DesactivarMatricula(int idMatricula);
         Task<List<MatriculaDTO>> ObtenerMatriculasActivasPorSede(string codigoSede);
+        Task<List<PeriodoAcademicoDTO>> ListarPeriodosDisponiblesParaMatricula();
     }
 }
