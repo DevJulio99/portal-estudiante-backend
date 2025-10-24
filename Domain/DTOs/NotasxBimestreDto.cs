@@ -9,6 +9,7 @@ namespace MyPortalStudent.Domain
         public required string descripcionCurso { get; set; }
         public required string codigoPeriodo { get; set; }
         public required string descripcionPeriodo { get; set; }
+        public required string codigoSubperiodo { get; set; }
         public required string nota { get; set; }
         public required string peso { get; set; }
         public required string tipoNota { get; set; }

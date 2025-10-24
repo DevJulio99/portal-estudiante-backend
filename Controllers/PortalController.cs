@@ -122,10 +122,10 @@ namespace MyPortalStudent.Controllers
             return Ok(apiResult);
         }
 
-        [HttpGet("NotasxBimestre/{idAlum}/{tipoPeriodo}/{anio}/{codCurso}/{codPeriodo}")]
-        public async Task<ActionResult> GetNotasxBimestre(int idAlum, string tipoPeriodo, int anio, string codCurso, string codPeriodo)
+        [HttpGet("NotasxBimestre/{idAlum}/{anio}/{codCurso}/{codSubperiodo}")]
+        public async Task<ActionResult> GetNotasxBimestre(int idAlum, int anio, string codCurso, string codSubperiodo)
         {
-            var data = await _funcionesApi.getNotasxBimestre(idAlum, tipoPeriodo, anio, codCurso, codPeriodo);
+            var data = await _funcionesApi.getNotasxBimestre(idAlum, anio, codCurso, codSubperiodo);
             if (data.Count == 0)
             {
                 return NotFound(new ApiResponse<List<NotasxBimestreDTO>> { Success = false, Message = "No se encontro notas", Data = [] });

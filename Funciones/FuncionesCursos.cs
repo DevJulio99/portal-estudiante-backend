@@ -81,11 +81,15 @@ namespace APIPostulaEnrolamiento.Funciones
                     direccion,
                     nombre || ' ' || apellido_paterno || ' ' || apellido_materno AS FullName,
                     correo AS CorreoPersonal,
-                    codigo_periodo AS codPeriodoActual
+                    p.codigo_periodo AS codPeriodoActual,
+                    COALESCE(s.codigo_subperiodo, '') AS codSubperiodoActual
                 FROM alumno
                 LEFT JOIN 
                 PeriodoAcademico p ON CURRENT_DATE BETWEEN
-	            p.fecha_inicio AND p.fecha_fin AND p.tipo_periodo = 'Bimestre'
+	            p.fecha_inicio AND p.fecha_fin AND p.tipo_periodo = 'Año'
+                LEFT JOIN 
+                subperiodos s ON p.id_periodo = s.id_periodo 
+                    AND CURRENT_DATE BETWEEN s.fecha_inicio AND s.fecha_fin
                 WHERE dni = @NumDocUsuario";
 
             var alumnos = await connection.QueryAsync<PerfilDTO>(sql, new { NumDocUsuario = numDocUsuario });
@@ -549,7 +553,7 @@ namespace APIPostulaEnrolamiento.Funciones
             return listaHorarios;
         }
 
-        public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, string tipoPeriodo, int anio, string codCurso, string codPeriodo)
+        public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, int anio, string codCurso, string codSubperiodo)
         {
             var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             await using var connection = new NpgsqlConnection(connectionString);
@@ -563,11 +567,13 @@ namespace APIPostulaEnrolamiento.Funciones
                     descripcion_curso AS DescripcionCurso,
                     cod_periodo AS CodigoPeriodo,
                     descripcion_periodo AS DescripcionPeriodo,
+                    cod_subperiodo AS CodigoSubperiodo,
+                    descripcion_subperiodo AS DescripcionSubperiodo,
                     nota,
                     peso,
                     tipo_nota AS TipoNota
-                FROM obtener_notas_por_curso_periodo(@IdAlum, @TipoPeriodo, @Anio, @CodCurso, @CodPeriodo)";
-            var parameters = new { IdAlum = idAlum, TipoPeriodo = tipoPeriodo, Anio = anio, CodCurso = codCurso, CodPeriodo = codPeriodo};
+                FROM obtener_notas_por_curso_subperiodo(@IdAlum, @Anio, @CodCurso, @CodSubperiodo)";
+            var parameters = new { IdAlum = idAlum, Anio = anio, CodCurso = codCurso, CodSubperiodo = codSubperiodo};
             
             var notas = await connection.QueryAsync<NotasxBimestreDTO>(sql, parameters);
             return notas.AsList();

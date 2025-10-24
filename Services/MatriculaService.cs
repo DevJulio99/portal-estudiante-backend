@@ -223,17 +223,23 @@ namespace MyPortalStudent.Services
 
             const string query = @"
                 SELECT p.*
-                  FROM sede s
-                  JOIN periodoacademico p
-                    ON (
-                      (s.tipo_institucion = 'C' AND p.tipo_periodo = 'AÃ±o')
-                      OR
-                      (s.tipo_institucion = 'I' AND p.tipo_periodo = 'Ciclo')
-                    )
-                  WHERE s.codigo_sede = @CodigoSede
-                  AND ((CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin)
-                  OR (fecha_inicio > CURRENT_DATE))
-                  ORDER BY fecha_inicio ASC;";
+                FROM sede s
+                JOIN periodoacademico p
+                ON (
+                    (s.tipo_institucion = 'C' AND p.tipo_periodo = 'Año')
+                    OR
+                    (s.tipo_institucion = 'I' AND p.tipo_periodo = 'Ciclo')
+                )
+                WHERE s.codigo_sede = @CodigoSede
+                AND (
+                    CURRENT_DATE BETWEEN p.fecha_inicio AND p.fecha_fin
+                    OR p.fecha_inicio > CURRENT_DATE
+                )
+                AND p.anio <= (
+                    EXTRACT(YEAR FROM CURRENT_DATE)
+                    + CASE WHEN EXTRACT(MONTH FROM CURRENT_DATE) >= 10 THEN 1 ELSE 0 END
+                )
+                ORDER BY p.fecha_inicio ASC;";
 
             var periodos = await connection.QueryAsync<PeriodoAcademicoDTO>(query, new { CodigoSede = codigoSede });
             return periodos.AsList();

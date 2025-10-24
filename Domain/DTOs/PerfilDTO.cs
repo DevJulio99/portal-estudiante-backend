@@ -15,6 +15,7 @@ public class PerfilDTO
     public required string documenIdentida { get; set; }
     public required string codModalidadEstActual { get; set; }
     public required string codPeriodoActual { get; set; }
+    public required string codSubperiodoActual { get; set; }
     public required string codPeriodoBanner { get; set; }
     public required string codPeriodoBannerCatalogo { get; set; }
     public required string codProductoActual { get; set; }
