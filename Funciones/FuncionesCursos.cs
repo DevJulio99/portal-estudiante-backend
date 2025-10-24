@@ -1067,7 +1067,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
                     command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
                     command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
-                    command.Parameters.AddWithValue("gradoalumno", alumnoRegistrarDto.idGrado);
+                    command.Parameters.AddWithValue("gradoalumno", (object)alumnoRegistrarDto.idGrado ?? DBNull.Value);
                     command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
 
                     try
@@ -1115,7 +1115,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
                     command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
                     command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
-                    command.Parameters.AddWithValue("gradoalumno", alumnoRegistrarDto.idGrado);
+                    command.Parameters.AddWithValue("gradoalumno", (object)alumnoRegistrarDto.idGrado ?? DBNull.Value);
                     command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
 
                     try

@@ -38,7 +38,7 @@ namespace MyPortalStudent.Services
             try
             {
                 const string sql = "SELECT realizar_matricula(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro)";
-                
+
                 var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(
                     sql,
                     parameters
@@ -60,7 +60,7 @@ namespace MyPortalStudent.Services
                     var message = dbResult.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Error desconocido desde la base de datos.";
                     throw new InvalidOperationException(message);
                 }
-                
+
                 // Si no hay propiedad "success" o es true, asumimos que es un caso de éxito
                 // y que el JSON contiene los datos de la matrícula.
                 return new MatriculaResponseDTO
@@ -217,16 +217,25 @@ namespace MyPortalStudent.Services
             return matriculas.AsList();
         }
 
-        public async Task<List<PeriodoAcademicoDTO>> ListarPeriodosDisponiblesParaMatricula()
+        public async Task<List<PeriodoAcademicoDTO>> ListarPeriodosDisponiblesParaMatricula(string codigoSede)
         {
             await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
-            
-            const string query = @"
-                SELECT * FROM periodoacademico
-                WHERE (CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin) OR (fecha_inicio > CURRENT_DATE)
-                ORDER BY fecha_inicio ASC;";
 
-            var periodos = await connection.QueryAsync<PeriodoAcademicoDTO>(query);
+            const string query = @"
+                SELECT p.*
+                  FROM sede s
+                  JOIN periodoacademico p
+                    ON (
+                      (s.tipo_institucion = 'C' AND p.tipo_periodo = 'AÃ±o')
+                      OR
+                      (s.tipo_institucion = 'I' AND p.tipo_periodo = 'Ciclo')
+                    )
+                  WHERE s.codigo_sede = @CodigoSede
+                  AND ((CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin)
+                  OR (fecha_inicio > CURRENT_DATE))
+                  ORDER BY fecha_inicio ASC;";
+
+            var periodos = await connection.QueryAsync<PeriodoAcademicoDTO>(query, new { CodigoSede = codigoSede });
             return periodos.AsList();
         }
     }

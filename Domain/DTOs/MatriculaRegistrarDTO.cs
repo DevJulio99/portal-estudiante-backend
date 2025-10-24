@@ -4,7 +4,7 @@ namespace MyPortalStudent.Domain.DTOs
     {
         public required int IdAlumno { get; set; }
         public required int IdPeriodo { get; set; }
-        public required int IdGrado { get; set; }
+        public int? IdGrado { get; set; }
         public required string CodigoSede { get; set; }
         public string TipoMatricula { get; set; } = "Regular";
         public string EstadoMatricula { get; set; } = "Activa";

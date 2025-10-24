@@ -241,10 +241,10 @@ namespace MyPortalStudent.Controllers
         /// Obtiene los períodos académicos disponibles para matrícula (activos y futuros).
         /// </summary>
         /// <returns>Una lista de períodos académicos.</returns>
-        [HttpGet("periodos-disponibles")]
-        public async Task<ActionResult> ListarPeriodosDisponibles()
+        [HttpGet("periodos-disponibles/{codigoSede}")]
+        public async Task<ActionResult> ListarPeriodosDisponibles(string codigoSede)
         {
-            var periodos = await _matriculaService.ListarPeriodosDisponiblesParaMatricula();
+            var periodos = await _matriculaService.ListarPeriodosDisponiblesParaMatricula(codigoSede);
 
             return Ok(new ApiResponse<List<PeriodoAcademicoDTO>>
             {
