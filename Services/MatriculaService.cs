@@ -37,7 +37,7 @@ namespace MyPortalStudent.Services
             // Usamos QuerySingleOrDefaultAsync<string> para leer ese valor.
             try
             {
-                const string sql = "SELECT realizar_matricula(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro)";
+                const string sql = "SELECT realizar_matricula_colegio(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro)";
 
                 var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(
                     sql,
@@ -226,7 +226,7 @@ namespace MyPortalStudent.Services
                 FROM sede s
                 JOIN periodoacademico p
                 ON (
-                    (s.tipo_institucion = 'C' AND p.tipo_periodo = 'Año')
+                    (s.tipo_institucion = 'C' AND p.tipo_periodo = 'AÃ±o')
                     OR
                     (s.tipo_institucion = 'I' AND p.tipo_periodo = 'Ciclo')
                 )

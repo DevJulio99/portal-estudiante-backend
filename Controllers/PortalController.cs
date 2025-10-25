@@ -290,10 +290,10 @@ namespace MyPortalStudent.Controllers
             return Ok(apiResult);
         }
 
-        [HttpGet("listar-grados")]
-        public async Task<IActionResult> ListarGrados()
+        [HttpGet("listar-grados/{tipoInstitucion}")]
+        public async Task<IActionResult> ListarGrados(string tipoInstitucion)
         {
-            var grados = await _funcionesApi.GetGrados();
+            var grados = await _funcionesApi.GetGrados(tipoInstitucion);
 
             if (grados == null || grados.Count == 0)
             {
@@ -351,6 +351,19 @@ namespace MyPortalStudent.Controllers
             var estado = await _funcionesApi.EliminarCurso(idCurso);
             var apiResult = new ApiResponse<object> { Success = estado, Message = "Se eliminó el curso correctamente" };
             return Ok(apiResult);
+        }
+
+        [HttpGet("cursos-alumno/{idAlumno}")]
+        public async Task<IActionResult> GetCursosAlumno(int idAlumno)
+        {
+            var cursos = await _funcionesApi.getCursosAlumno(idAlumno);
+
+            if (cursos == null || !cursos.Any())
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron cursos para el alumno." });
+            }
+
+            return Ok(new ApiResponse<List<ReporteMatriculaColegioDTO>> { Data = cursos, Message = "Cursos del alumno encontrados" });
         }
     }
 }

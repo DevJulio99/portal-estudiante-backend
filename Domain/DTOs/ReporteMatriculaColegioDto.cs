@@ -9,6 +9,8 @@ namespace MyPortalStudent.Domain
         public required string salon { get; set; }
         public required string seccion { get; set; }
         public required DocenteCursoDTO[] docente { get; set; }
+        public string nombreDocente { get; set; }
+        public string correoDocente { get; set; }
         public required string ciclo { get; set; }
         public required string creditos { get; set; }
         public required string cantidadVeces { get; set; }

@@ -1219,35 +1219,17 @@ namespace APIPostulaEnrolamiento.Funciones
             return status;
         }
 
-        public async Task<List<GradoDTO>> GetGrados()
+        public async Task<List<GradoDTO>> GetGrados(string tipoInstitucion)
         {
             var grados = new List<GradoDTO>();
+            
+            string connectionString = _configuration.GetConnectionString("DefaultConnection")!;
+            await using var connection = new NpgsqlConnection(connectionString);
 
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            const string query = @"SELECT ""ID_GRADO"" AS IdGrado, ""NUMERO_GRADO"" AS NumeroGrado, ""DESCRIPCION_GRADO"" AS DescripcionGrado, ""NIVEL_EDUCATIVO"" AS NivelEducativo FROM public.grado WHERE tipo_institucion ILIKE @Institucion";
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
-            {
-                await connection.OpenAsync();
-
-                string query = @"SELECT ""ID_GRADO"", ""NUMERO_GRADO"", ""DESCRIPCION_GRADO"", ""NIVEL_EDUCATIVO"" FROM public.grado";
-
-                using (var cmd = new NpgsqlCommand(query, connection))
-                using (var reader = await cmd.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        grados.Add(new GradoDTO
-                        {
-                            IdGrado = reader.GetInt32(0),
-                            NumeroGrado = reader.GetInt32(1),
-                            DescripcionGrado = reader.GetString(2),
-                            NivelEducativo = reader.GetString(3)
-                        });
-                    }
-                }
-            }
-
-            return grados;
+            var result = await connection.QueryAsync<GradoDTO>(query, new { Institucion = tipoInstitucion });
+            return result.AsList();
         }
 
         public async Task<List<CursoListarDTO>> ListarCursosPorSede(SedePaginadoDTO listaCurso)
@@ -1438,6 +1420,71 @@ namespace APIPostulaEnrolamiento.Funciones
             }
 
             return true;
+        }
+
+        public async Task<List<ReporteMatriculaColegioDTO>> getCursosAlumno(int idAlumno)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection")!;
+            await using var connection = new NpgsqlConnection(connectionString);
+
+            const string sql = @"
+                SELECT DISTINCT ON (mc.id_seccion)
+                    c.codigo_curso AS CodCurso, 
+                    c.descripcion_curso AS DescCurso, 
+                    c.modalidad,
+                    m.id_periodo as idPeriodo,
+                    COALESCE(sp.codigo_subperiodo, pa.codigo_periodo) AS CodigoPeriodoAcademico,
+                    COALESCE(sp.descripcion_subperiodo, pa.descripcion_periodo) AS Periodo,
+                    COALESCE(sp.fecha_inicio, pa.fecha_inicio) AS FechaInicio,
+                    COALESCE(sp.fecha_fin, pa.fecha_fin) AS FechaFin,
+                    g.""DESCRIPCION_GRADO"" AS grado,
+	                g.""NIVEL_EDUCATIVO"" AS nivel,
+	                au.descripcion_aula AS salon,
+	                sec.codigo_seccion,
+	                sec.descripcion AS seccion,
+	                sec.ciclo,
+                    doc.nombre || ' ' || doc.apellido_paterno || ' ' || doc.apellido_materno AS nombreDocente,
+	                doc.correo as correoDocente
+                FROM matricula_curso mc
+                INNER JOIN matricula m ON mc.id_matricula = m.id_matricula
+                INNER JOIN grado g ON m.id_grado = g.""ID_GRADO""
+                INNER JOIN alumno a ON a.id_alumno = m.id_alumno
+                INNER JOIN curso c ON mc.id_curso = c.id_curso
+                LEFT JOIN detalleseccionasignada dsa ON dsa.id_seccion = mc.id_seccion
+                LEFT JOIN docente doc ON dsa.id_docente = doc.id_docente
+                LEFT JOIN seccion sec ON dsa.id_seccion = sec.id_seccion
+                LEFT JOIN aula au ON dsa.id_aula = au.id_aula
+                --Si el alumno es de tipo 'c' -> se une a subperiodos
+                LEFT JOIN LATERAL (
+                    SELECT *
+                    FROM subperiodos sp
+                    WHERE a.tipo_institucion ILIKE 'c'
+                      AND sp.id_periodo = m.id_periodo
+                      AND (
+                          CURRENT_DATE BETWEEN sp.fecha_inicio AND sp.fecha_fin
+                          OR sp.fecha_inicio > CURRENT_DATE
+                      )
+                    ORDER BY sp.fecha_inicio
+                    LIMIT 1
+                ) sp ON TRUE
+                --Si el alumno es de tipo 'i' -> se une a periodoacademico
+                LEFT JOIN LATERAL (
+                    SELECT *
+                    FROM periodoacademico pa
+                    WHERE a.tipo_institucion = 'i'
+                      AND pa.id_periodo = m.id_periodo
+                      AND (
+                          CURRENT_DATE BETWEEN pa.fecha_inicio AND pa.fecha_fin
+                          OR pa.fecha_inicio > CURRENT_DATE
+                      )
+                    ORDER BY pa.fecha_inicio
+                    LIMIT 1
+                ) pa ON TRUE
+                WHERE m.id_alumno = @idAlumno AND m.activo = true
+                ORDER BY mc.id_seccion, dsa.id_detalle";
+
+            var cursos = await connection.QueryAsync<ReporteMatriculaColegioDTO>(sql, new { idAlumno });
+            return cursos.AsList();
         }
     }
 }
