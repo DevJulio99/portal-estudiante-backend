@@ -253,5 +253,23 @@ namespace MyPortalStudent.Controllers
                 Data = periodos
             });
         }
+
+        [HttpPost("cursos-por-grado")]
+        public async Task<ActionResult> GetCursosPorGrado([FromBody] CursosPorGradoRequestDTO request)
+        {
+            var cursos = await _matriculaService.GetCursosPorGrado(request.IdGrado, request.TipoInstitucion);
+
+            if (cursos == null || !cursos.Any())
+            {
+                return NotFound(new ApiResponse<List<CursoSeccionDTO>>
+                {
+                    Success = false,
+                    Message = "No se encontraron cursos para el grado y tipo de institución especificados.",
+                    Data = []
+                });
+            }
+
+            return Ok(new ApiResponse<List<CursoSeccionDTO>> { Success = true, Message = "Cursos encontrados.", Data = cursos });
+        }
     }
 }

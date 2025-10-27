@@ -30,14 +30,15 @@ namespace MyPortalStudent.Services
                 p_tipo_matricula = matriculaDto.TipoMatricula,
                 p_estado_matricula = matriculaDto.EstadoMatricula,
                 p_observaciones = matriculaDto.Observaciones,
-                p_usuario_registro = matriculaDto.UsuarioRegistro
+                p_usuario_registro = matriculaDto.UsuarioRegistro,
+                p_tipo_institucion = matriculaDto.TipoInstitucion
             };
 
             // La función de base de datos devuelve una sola columna con un resultado en formato JSON.
             // Usamos QuerySingleOrDefaultAsync<string> para leer ese valor.
             try
             {
-                const string sql = "SELECT realizar_matricula_colegio(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro)";
+                const string sql = "SELECT realizar_matricula_colegio(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro, @p_tipo_institucion)";
 
                 var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(
                     sql,
@@ -243,6 +244,58 @@ namespace MyPortalStudent.Services
 
             var periodos = await connection.QueryAsync<PeriodoAcademicoDTO>(query, new { CodigoSede = codigoSede });
             return periodos.AsList();
+        }
+
+        public async Task<List<CursoSeccionDTO>> GetCursosPorGrado(int idGrado, string tipoInstitucion)
+        {
+            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            const string sql = @"
+                SELECT 
+                    c.id_curso AS IdCurso,
+                    c.codigo_curso AS CodigoCurso,
+                    c.descripcion_curso AS DescripcionCurso,
+                    COALESCE(
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'id_seccion', s.id_seccion,
+                                'codigo_seccion', s.codigo_seccion,
+                                'descripcion_seccion', s.descripcion,
+                                'horario', JSON_BUILD_OBJECT(
+                                    'turno', dsa.turno,
+                                    'nombre_dia', h.nombre_dia,
+                                    'fecha_inicio', h.fecha_inicio,
+                                    'fecha_fin', h.fecha_fin,
+                                    'hora_inicio', h.hora_inicio,
+                                    'hora_fin', h.hora_fin
+                                )
+                            )
+                        ) FILTER (WHERE s.id_seccion IS NOT NULL),
+                        '[]'
+                    ) AS SeccionesJson
+                FROM grado_curso gc
+                INNER JOIN curso c 
+                    ON gc.id_curso = c.id_curso
+                LEFT JOIN detalleseccionasignada dsa 
+                    ON gc.id_curso = dsa.id_curso
+                LEFT JOIN seccion s 
+                    ON dsa.id_seccion = s.id_seccion
+                LEFT JOIN horario h 
+                    ON dsa.id_horario = h.id_horario
+                WHERE gc.tipo_institucion ILIKE @tipoInstitucion
+                  AND gc.""ID_GRADO"" = @idGrado
+                GROUP BY c.id_curso, c.codigo_curso, c.descripcion_curso
+                ORDER BY c.codigo_curso;
+            ";
+
+            var results = await connection.QueryAsync<dynamic>(sql, new { idGrado, tipoInstitucion });
+
+            return results.Select(row => new CursoSeccionDTO
+            {
+                IdCurso = row.idcurso,
+                CodigoCurso = row.codigocurso,
+                DescripcionCurso = row.descripcioncurso,
+                Secciones = JsonSerializer.Deserialize<List<SeccionInfoDTO>>(row.seccionesjson) ?? new List<SeccionInfoDTO>()
+            }).ToList();
         }
     }
 }

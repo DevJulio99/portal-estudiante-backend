@@ -10,5 +10,6 @@ namespace MyPortalStudent.Domain.DTOs
         public string EstadoMatricula { get; set; } = "Activa";
         public string? Observaciones { get; set; }
         public string UsuarioRegistro { get; set; } = "SISTEMA";
+        public string TipoInstitucion { get; set; } = "";
     }
 }

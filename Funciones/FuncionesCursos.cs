@@ -1428,7 +1428,7 @@ namespace APIPostulaEnrolamiento.Funciones
             await using var connection = new NpgsqlConnection(connectionString);
 
             const string sql = @"
-                SELECT DISTINCT ON (mc.id_seccion)
+                SELECT DISTINCT ON (mc.id_curso)
                     c.codigo_curso AS CodCurso, 
                     c.descripcion_curso AS DescCurso, 
                     c.modalidad,
@@ -1481,7 +1481,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     LIMIT 1
                 ) pa ON TRUE
                 WHERE m.id_alumno = @idAlumno AND m.activo = true
-                ORDER BY mc.id_seccion, dsa.id_detalle";
+                ORDER BY mc.id_curso, dsa.id_detalle";
 
             var cursos = await connection.QueryAsync<ReporteMatriculaColegioDTO>(sql, new { idAlumno });
             return cursos.AsList();
