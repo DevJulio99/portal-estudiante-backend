@@ -81,6 +81,7 @@ namespace APIPostulaEnrolamiento.Funciones
                     direccion,
                     nombre || ' ' || apellido_paterno || ' ' || apellido_materno AS FullName,
                     correo AS CorreoPersonal,
+                    foto_perfil AS FotoUrlLow,
                     p.codigo_periodo AS codPeriodoActual,
                     COALESCE(s.codigo_subperiodo, '') AS codSubperiodoActual
                 FROM alumno
