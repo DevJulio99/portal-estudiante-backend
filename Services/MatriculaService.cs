@@ -297,5 +297,43 @@ namespace MyPortalStudent.Services
                 Secciones = JsonSerializer.Deserialize<List<SeccionInfoDTO>>(row.seccionesjson) ?? new List<SeccionInfoDTO>()
             }).ToList();
         }
+
+        public async Task<List<ReporteNotaDTO>> GetReporteNotas(int idAlumno)
+        {
+            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            const string sql = @"
+                WITH notas_filtradas AS (
+                    SELECT 
+                        mc.id_curso,
+                        n.id_subperiodo,
+                        n.nota,
+                        c.descripcion_curso
+                    FROM matricula m
+                    INNER JOIN matricula_curso mc 
+                        ON m.id_matricula = mc.id_matricula
+                    INNER JOIN notas n 
+                        ON m.id_periodo = n.id_periodo
+                        AND mc.id_curso = n.id_curso
+                    INNER JOIN curso c
+                        ON mc.id_curso = c.id_curso
+                    WHERE 
+                        m.id_alumno = @idAlumno
+                        AND n.tipo_nota = 'Promedio Final'
+                )
+                SELECT 
+                    nf.id_subperiodo,
+                    sp.descripcion_subperiodo,
+                    nf.descripcion_curso,
+                    nf.nota AS promedio_curso,
+                    AVG(nf.nota) OVER (PARTITION BY nf.id_subperiodo) AS promedio_bimestre,
+                    AVG(nf.nota) OVER () AS promedio_anual
+                FROM notas_filtradas nf
+                INNER JOIN subperiodos sp
+                    ON nf.id_subperiodo = sp.id_subperiodo
+                ORDER BY sp.fecha_inicio, nf.id_curso;";
+
+            var reportes = await connection.QueryAsync<ReporteNotaDTO>(sql, new { idAlumno });
+            return reportes.AsList();
+        }
     }
 }

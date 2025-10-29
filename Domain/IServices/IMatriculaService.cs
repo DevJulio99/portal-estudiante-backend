@@ -14,5 +14,6 @@ namespace MyPortalStudent.Domain.IServices
         Task<List<MatriculaDTO>> ObtenerMatriculasActivasPorSede(string codigoSede);
         Task<List<PeriodoAcademicoDTO>> ListarPeriodosDisponiblesParaMatricula(string codigoSede);
         Task<List<CursoSeccionDTO>> GetCursosPorGrado(int idGrado, string tipoInstitucion);
+        Task<List<ReporteNotaDTO>> GetReporteNotas(int idAlumno);
     }
 }

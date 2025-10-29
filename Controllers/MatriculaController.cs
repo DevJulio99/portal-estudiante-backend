@@ -271,5 +271,23 @@ namespace MyPortalStudent.Controllers
 
             return Ok(new ApiResponse<List<CursoSeccionDTO>> { Success = true, Message = "Cursos encontrados.", Data = cursos });
         }
+
+        [HttpGet("reporte-notas/{idAlumno}")]
+        public async Task<ActionResult> GetReporteNotas(int idAlumno)
+        {
+            var reporte = await _matriculaService.GetReporteNotas(idAlumno);
+
+            if (reporte == null || !reporte.Any())
+            {
+                return NotFound(new ApiResponse<List<ReporteNotaDTO>>
+                {
+                    Success = false,
+                    Message = "No se encontró reporte de notas para el alumno especificado.",
+                    Data = []
+                });
+            }
+
+            return Ok(new ApiResponse<List<ReporteNotaDTO>> { Success = true, Message = "Reporte de notas encontrado.", Data = reporte });
+        }
     }
 }
