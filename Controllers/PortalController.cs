@@ -74,10 +74,10 @@ namespace MyPortalStudent.Controllers
             return Ok(apiResult);
         }
 
-        [HttpGet("Asistencias/{idAlum}/{bimester}/{codCurso}/{anio}")]
-        public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string bimester, string codCurso, int anio)
+        [HttpGet("Asistencias/{idAlum}/{codCurso}")]
+        public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string codCurso)
         {
-            var data = await _funcionesApi.getAsistenciasAlumno(idAlum,bimester, codCurso, anio);
+            var data = await _funcionesApi.getAsistenciasAlumno(idAlum, codCurso);
             if (data.Count == 0)
             {
                 return NotFound(new ApiResponse<List<AlumnoAsistenciaDTO>> { Success = false, Message = "No se encontro asistencias", Data = [] });

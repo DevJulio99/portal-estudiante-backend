@@ -438,28 +438,47 @@ namespace APIPostulaEnrolamiento.Funciones
         }
 
 
-        public async Task<List<AlumnoAsistenciaDTO>> getAsistenciasAlumno(int idAlum, string bimester, string codCurso , int anio)
+        public async Task<List<AlumnoAsistenciaDTO>> getAsistenciasAlumno(int idAlum, string codCurso)
         {
             string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = new NpgsqlConnection(connectionString);
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_asistencias_alumno_bimestre({idAlum},'{bimester}','{codCurso}',{anio})", connection);
+            const string sql = @"
+                SELECT a.id_asistencia, a.dia, a.estado_asistencia, c.descripcion_curso,
+                       h.hora_inicio, h.hora_fin, pa.codigo_periodo, sp.codigo_subperiodo 
+                FROM asistencias a
+                INNER JOIN matricula_curso mc ON a.id_matricula_curso = mc.id_matricula_curso
+                INNER JOIN curso c ON mc.id_curso = c.id_curso
+                INNER JOIN matricula m ON mc.id_matricula = m.id_matricula
+                INNER JOIN alumno al ON m.id_alumno = al.id_alumno
+                INNER JOIN detalleseccionasignada ds ON m.id_periodo = ds.id_periodo AND mc.id_curso = ds.id_curso
+                INNER JOIN horario h ON ds.id_horario = h.id_horario
+                INNER JOIN periodoacademico pa ON ds.id_periodo = pa.id_periodo
+                LEFT JOIN subperiodos sp ON pa.id_periodo = sp.id_periodo
+                WHERE a.id_alumno = @IdAlumno
+                AND (
+                      (al.tipo_institucion ILIKE 'i' AND CURRENT_DATE BETWEEN pa.fecha_inicio AND pa.fecha_fin)
+                      OR
+                      (al.tipo_institucion ILIKE 'c' AND CURRENT_DATE BETWEEN sp.fecha_inicio AND sp.fecha_fin)
+                )
+                AND c.codigo_curso = @CodigoCurso";
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            var asistencias = await connection.QueryAsync(sql, new { IdAlumno = idAlum, CodigoCurso = codCurso });
+
             var listaAsistencias = new List<AlumnoAsistenciaDTO>([]);
 
-
-            while (reader.Read())
+            foreach (var asistencia in asistencias)
             {
-                   listaAsistencias.Add(new AlumnoAsistenciaDTO {
-                    idAsistencia = (int)reader["id_asistencia"],
-                    dia = reader["dia"].ToString() ?? "",  
-                    estadoAsistencia = reader["estado_asistencia"].ToString() ?? "",    
-                    descripcionCurso = reader["descripcion_curso"].ToString() ?? "",
-                    modalidad = reader["modalidad"].ToString() ?? "",
-                    horaInicio =  reader["hora_inicio"].ToString() ?? "",
-                    horaFin = reader["hora_fin"].ToString() ?? "",
+                listaAsistencias.Add(new AlumnoAsistenciaDTO {
+                    idAsistencia = asistencia.id_asistencia,
+                    dia = asistencia.dia.ToString() ?? "",
+                    estadoAsistencia = asistencia.estado_asistencia,
+                    descripcionCurso = asistencia.descripcion_curso,
+                    horaInicio = asistencia.hora_inicio.ToString() ?? "",
+                    horaFin = asistencia.hora_fin.ToString() ?? "",
+                    codigoPeriodo = asistencia.codigo_periodo,
+                    codigoSubperiodo = asistencia.codigo_subperiodo,
+                    modalidad = "Presencial"
                 });
                 
             }
@@ -652,7 +671,6 @@ namespace APIPostulaEnrolamiento.Funciones
                     IdPago = (int)reader["idpago"],
                     DocumentoPago = reader["documentopago"].ToString() ?? "",
                     FechaVencimiento = (DateTime)reader["fechav"],
-                    Ciclo = reader["ciclopago"].ToString() ?? "",
                     Saldo = (decimal)reader["saldopago"],
                     Mora = (decimal)reader["morapago"],
                     TotalAPagar = (decimal)reader["totalpago"],
