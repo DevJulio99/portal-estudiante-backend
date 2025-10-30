@@ -227,7 +227,7 @@ namespace MyPortalStudent.Services
                 FROM sede s
                 JOIN periodoacademico p
                 ON (
-                    (s.tipo_institucion = 'C' AND p.tipo_periodo = 'AÃ±o')
+                    (s.tipo_institucion = 'C' AND p.tipo_periodo = 'Año')
                     OR
                     (s.tipo_institucion = 'I' AND p.tipo_periodo = 'Ciclo')
                 )
@@ -316,9 +316,12 @@ namespace MyPortalStudent.Services
                         AND mc.id_curso = n.id_curso
                     INNER JOIN curso c
                         ON mc.id_curso = c.id_curso
+                    INNER JOIN periodoacademico pa
+					    ON m.id_periodo = pa.id_periodo
                     WHERE 
                         m.id_alumno = @idAlumno
                         AND n.tipo_nota = 'Promedio Final'
+                        AND current_date between pa.fecha_inicio and pa.fecha_fin
                 )
                 SELECT 
                     nf.id_subperiodo,
