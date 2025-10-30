@@ -307,7 +307,8 @@ namespace MyPortalStudent.Services
                         mc.id_curso,
                         n.id_subperiodo,
                         n.nota,
-                        c.descripcion_curso
+                        c.descripcion_curso,
+                        pa.id_periodo
                     FROM matricula m
                     INNER JOIN matricula_curso mc 
                         ON m.id_matricula = mc.id_matricula
@@ -333,6 +334,7 @@ namespace MyPortalStudent.Services
                 FROM notas_filtradas nf
                 INNER JOIN subperiodos sp
                     ON nf.id_subperiodo = sp.id_subperiodo
+                    AND nf.id_periodo = sp.id_periodo
                 ORDER BY sp.fecha_inicio, nf.id_curso;";
 
             var reportes = await connection.QueryAsync<ReporteNotaDTO>(sql, new { idAlumno });
