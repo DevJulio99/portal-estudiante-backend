@@ -22,6 +22,8 @@ public class PerfilDTO
     public required string codPrograma { get; set; }
     public required string codNivel { get; set; }
     public required string desNivel { get; set; }
+    public string desGrado { get; set; }
+    public string desSeccion { get; set; }
     public required string codCampus { get; set; }
     public required string desCampus { get; set; }
     public required string codEstadoAlumno { get; set; }

@@ -83,8 +83,14 @@ namespace APIPostulaEnrolamiento.Funciones
                     correo AS CorreoPersonal,
                     foto_perfil AS FotoUrlLow,
                     p.codigo_periodo AS codPeriodoActual,
-                    COALESCE(s.codigo_subperiodo, '') AS codSubperiodoActual
-                FROM alumno
+                    COALESCE(s.codigo_subperiodo, '') AS codSubperiodoActual,
+					g.""DESCRIPCION_GRADO"" as desGrado,
+					g.""NIVEL_EDUCATIVO"" as desNivel,
+					sec.descripcion as desSeccion
+                FROM alumno a
+				inner join matricula m on a.id_alumno = m.id_alumno
+				inner join grado g on m.id_grado = g.""ID_GRADO""
+				inner join seccion sec on m.id_seccion = sec.id_seccion
                 LEFT JOIN 
                 PeriodoAcademico p ON CURRENT_DATE BETWEEN
 	            p.fecha_inicio AND p.fecha_fin AND p.tipo_periodo = 'Año'
