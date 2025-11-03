@@ -6,7 +6,9 @@ using MyPortalStudent.Domain.IServices;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace MyPortalStudent.Services
 {
@@ -170,6 +172,49 @@ ORDER BY se.descripcion;
                                 ORDER BY n.id_periodo, n.id_subperiodo, n.tipo_nota;";
             var notas = await connection.QueryAsync<NotasAlumnoDTO>(sql, request);
             return notas.AsList();
+        }
+
+        public async Task<BaseResponseDTO> RegistrarNotasAlumno(RegistrarNotaDto request)
+        {
+
+            try
+            {
+                await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+
+                var parameters = new
+                {
+                    p_id_alumno = request.IdAlumno,
+                    p_id_curso = request.IdCurso,
+                    p_id_periodo = request.IdPeriodo,
+                    p_tipo_nota = request.TipoNota,
+                    p_nota = request.Nota,
+                    p_peso = request.Peso,
+                    p_id_subperiodo = request.IdSubperiodo
+                };
+
+                const string sql = "SELECT insertar_nota(@p_id_alumno, @p_id_curso, @p_id_periodo, @p_tipo_nota, @p_nota, @p_peso, @p_id_subperiodo)";
+
+                var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(sql, parameters, commandType: CommandType.Text);
+                
+                if (string.IsNullOrEmpty(jsonResult))
+                {
+                    throw new InvalidOperationException("La función de base de datos no devolvió un resultado.");
+                }
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var dbResult = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+                if (dbResult == null || !dbResult.Success)
+                {
+                    throw new InvalidOperationException(dbResult?.Message ?? "Error al procesar la respuesta de la base de datos.");
+                }
+
+                return dbResult;
+            }
+            catch (PostgresException ex)
+            {
+                return new BaseResponseDTO { Success = false, Message = ex.MessageText };
+            }
         }
     }
 }

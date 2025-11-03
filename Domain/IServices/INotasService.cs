@@ -14,5 +14,6 @@ namespace MyPortalStudent.Domain.IServices
         Task<List<CursoGradoDTO>> GetCursosPorGrado(CursosPorGradoSedeRequestDTO request);
         Task<List<AlumnoFiltroDTO>> GetAlumnosPorFiltro(AlumnosPorFiltroRequestDTO request);
         Task<List<NotasAlumnoDTO>> GetNotasAlumno(NotasAlumnoRequestDTO request);
+        Task<BaseResponseDTO> RegistrarNotasAlumno(RegistrarNotaDto request);
     }
 }

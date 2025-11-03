@@ -163,5 +163,13 @@ namespace MyPortalStudent.Controllers
                 Data = notas
             });
         }
+
+        [HttpPost("registrar")]
+        public async Task<ActionResult> RegistrarNotasAlumno([FromBody] RegistrarNotaDto request)
+        {
+            var resultado = await _notasService.RegistrarNotasAlumno(request);
+
+            return Ok(new ApiResponse<BaseResponseDTO> { Success = true, Message = resultado.Message, Data = resultado });
+        }
     }
 }
