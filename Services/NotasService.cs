@@ -186,19 +186,57 @@ ORDER BY se.descripcion;
                     p_id_alumno = request.IdAlumno,
                     p_id_curso = request.IdCurso,
                     p_id_periodo = request.IdPeriodo,
-                    p_tipo_nota = request.TipoNota,
-                    p_nota = request.Nota,
-                    p_peso = request.Peso,
-                    p_id_subperiodo = request.IdSubperiodo
+                    p_id_subperiodo = request.IdSubperiodo,
+                    p_notas = JsonSerializer.Serialize(request.Notas)
                 };
 
-                const string sql = "SELECT insertar_nota(@p_id_alumno, @p_id_curso, @p_id_periodo, @p_tipo_nota, @p_nota, @p_peso, @p_id_subperiodo)";
+                const string sql = "SELECT insertar_notas(@p_id_alumno, @p_id_curso, @p_id_periodo, @p_notas::json, @p_id_subperiodo)";
 
                 var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(sql, parameters, commandType: CommandType.Text);
                 
                 if (string.IsNullOrEmpty(jsonResult))
                 {
-                    throw new InvalidOperationException("La función de base de datos no devolvió un resultado.");
+                    throw new InvalidOperationException("La función de base de datos para registrar notas no devolvió un resultado.");
+                }
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var dbResult = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+                if (dbResult == null || !dbResult.Success)
+                {
+                    throw new InvalidOperationException(dbResult?.Message ?? "Error al procesar la respuesta de la base de datos.");
+                }
+
+                return dbResult;
+            }
+            catch (PostgresException ex)
+            {
+                return new BaseResponseDTO { Success = false, Message = ex.MessageText };
+            }
+        }
+
+        public async Task<BaseResponseDTO> ActualizarNotasAlumno(RegistrarNotaDto request)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+
+                var parameters = new
+                {
+                    p_id_alumno = request.IdAlumno,
+                    p_id_curso = request.IdCurso,
+                    p_id_periodo = request.IdPeriodo,
+                    p_id_subperiodo = request.IdSubperiodo,
+                    p_notas = JsonSerializer.Serialize(request.Notas)
+                };
+
+                const string sql = "SELECT actualizar_notas(@p_id_alumno, @p_id_curso, @p_id_periodo, @p_notas::json, @p_id_subperiodo)";
+
+                var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(sql, parameters, commandType: CommandType.Text);
+
+                if (string.IsNullOrEmpty(jsonResult))
+                {
+                    throw new InvalidOperationException("La función de base de datos para actualizar notas no devolvió un resultado.");
                 }
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };

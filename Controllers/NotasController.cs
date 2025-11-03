@@ -169,7 +169,15 @@ namespace MyPortalStudent.Controllers
         {
             var resultado = await _notasService.RegistrarNotasAlumno(request);
 
-            return Ok(new ApiResponse<BaseResponseDTO> { Success = true, Message = resultado.Message, Data = resultado });
+            return Ok(new ApiResponse<object> { Success = true, Message = resultado.Message, Data = null });
+        }
+
+        [HttpPut("actualizar")]
+        public async Task<ActionResult> ActualizarNotasAlumno([FromBody] RegistrarNotaDto request)
+        {
+            var resultado = await _notasService.ActualizarNotasAlumno(request);
+
+            return Ok(new ApiResponse<object> { Success = true, Message = resultado.Message, Data = null });
         }
     }
 }
