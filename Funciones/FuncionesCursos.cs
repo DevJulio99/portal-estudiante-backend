@@ -1,24 +1,38 @@
 using System.Globalization;
 using MyPortalStudent.Domain;
 using MyPortalStudent.Domain.Ifunciones;
+using MyPortalStudent.Domain.IServices;
+using MyPortalStudent.Utils;
 using Npgsql;
 using Dapper;
 
-namespace APIPostulaEnrolamiento.Funciones
+namespace MyPortalStudent.Funciones
 {
     public class FuncionesCursos : IFuncionesApi
     {
         private readonly IConfiguration _configuration;
+        private readonly ITenantService? _tenantService;
 
-        public FuncionesCursos(IConfiguration configuration)
+        public FuncionesCursos(IConfiguration configuration, ITenantService? tenantService = null)
         {
             _configuration = configuration;
+            _tenantService = tenantService;
+        }
+
+        /// <summary>
+        /// Crea una conexión y establece el tenant automáticamente
+        /// </summary>
+        private async Task<NpgsqlConnection> GetConnectionAsync()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connection = new NpgsqlConnection(connectionString);
+            await connection.SetTenantIfAvailableAsync(_tenantService);
+            return connection;
         }
 
          public async Task<List<AlumnoDTO>> getAlumnos()
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString); // C# 8 using declaration
+            await using var connection = await GetConnectionAsync();
             
             const string sql = @"
                 SELECT 
@@ -35,8 +49,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> existeAlumno(string? numDocUsuario)
         {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
             // Usamos EXISTS para que la base de datos nos devuelva directamente un booleano.
             const string sql = "SELECT EXISTS (SELECT 1 FROM alumno WHERE dni = @Dni)";
             return await connection.ExecuteScalarAsync<bool>(sql, new { Dni = numDocUsuario });
@@ -44,8 +57,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<string> asistenciasPorCursoAlumno(AsistenciaCursoAlumnoDTO asistenciaCursoAlumnoDto)
         {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT * FROM asistencias_por_curso_alumno(
                                      @idAlumno, @anio, @inicioPeriodo, @finalPeriodo, @codCurso, @estadoAsistencia)";
             
@@ -65,8 +77,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<PerfilDTO>> getAlumnosId(string? numDocUsuario)
         {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string sql = @"
                 SELECT
@@ -105,9 +116,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<HorarioResponse>> getHorarioId(int idAlum, string fechaInicio, string fechaFin)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"select m.id_matricula,m.veces,ds.id_detalle,ds.turno,
                                       ds.rol_docente,h.*,s.codigo_seccion, 
@@ -137,7 +146,7 @@ namespace APIPostulaEnrolamiento.Funciones
                                       on ds.id_sede = sed.id_sede
                                       where m.id_alumno = {idAlum}", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaHorarios = new List<HorarioResponse>([]);
             var listaIdsMatriculas = new List<int>([]);
 
@@ -255,9 +264,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<CursoDTO>> getCursos(int idAlum)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from matricula m
                                          inner join detalleseccionasignada ds
@@ -274,7 +281,7 @@ namespace APIPostulaEnrolamiento.Funciones
                                          on ds.id_aula = a.id_aula
                                          where id_alumno = {idAlum}", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaCursos = new List<CursoDTO>([]);
 
 
@@ -321,13 +328,11 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<AsistenciaDTO>> getAsistencias(int idAlum, int idCurso)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from asistencias where id_alumno = {idAlum} and id_curso = {idCurso}", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaAsistencia = new List<AsistenciaDTO>([]);
 
 
@@ -347,13 +352,11 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<HorarioCursoDTO>> getHorarioCurso(int idHorario)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from horario where id_horario = {idHorario}", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaHorario = new List<HorarioCursoDTO>([]);
 
 
@@ -374,8 +377,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<ReporteMatriculaColegioDTO>> getCursosColegio(int idAlum, int anio, string codPeriodo)
         {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             //const string sql = "SELECT * FROM public.obtener_reporte_matricula_colegio(@IdAlum, @Anio)";
             const string sql = "SELECT * FROM public.obtener_reporte_matricula_colegio_periodo(@IdAlum, @Anio, @CodPeriodo)";
@@ -446,8 +448,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<AlumnoAsistenciaDTO>> getAsistenciasAlumno(int idAlum, string codCurso)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string sql = @"
                 SELECT a.id_asistencia, a.dia, a.estado_asistencia, c.descripcion_curso,
@@ -493,13 +494,11 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<HorarioxAulaDTO>> getHorariosxAula(int idAula)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_aula({idAula})", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaHorarios = new List<HorarioxAulaDTO>([]);
 
 
@@ -523,17 +522,15 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<HorarioCursoxAlumnnoDTO>> getHorariosCursoxAlumno(int idAlumno)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_cursos_por_alumno({idAlumno})", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaHorarios = new List<HorarioCursoxAlumnnoDTO>([]);
 
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                    listaHorarios.Add(new HorarioCursoxAlumnnoDTO {
                     nombreAlumno = reader["nombre_alumno"].ToString() ?? "",
@@ -552,17 +549,15 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<HorarioCursoxDocenteDTO>> getHorarioCursoxDocente(int idDocente)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from obtener_horarios_cursos_por_docente({idDocente})", connection);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaHorarios = new List<HorarioCursoxDocenteDTO>([]);
 
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                    listaHorarios.Add(new HorarioCursoxDocenteDTO {
                     nombreDocente = reader["nombre_docente"].ToString() ?? "",
@@ -581,8 +576,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, int anio, string codCurso, string codSubperiodo)
         {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
             
             const string sql = @"
                 SELECT 
@@ -607,8 +601,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio)
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string sql = "SELECT * FROM get_pagos_por_alumno(@IdAlumno, @Anio)";
             
@@ -621,10 +614,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using var connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             using var cmd = new NpgsqlCommand("SELECT * FROM get_resumen_pagos_por_alumno(@id_alumno, @anio)", connection);
             cmd.Parameters.AddWithValue("id_alumno", idAlumno);
@@ -651,15 +641,13 @@ namespace APIPostulaEnrolamiento.Funciones
 
          public async Task<List<PagoDTO>> getPagosPorSede(SedePaginadoDTO sedePaginadoDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
              int pagina = 0;
 
             if(sedePaginadoDto.pagina > 1){
                 pagina = (sedePaginadoDto.pagina - 1) * sedePaginadoDto.itemsPorPagina;
             }
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from listar_pagos_por_sede_paginado(@codSede, @pagina, @itemPagina)", connection);
             cmd.Parameters.AddWithValue("codSede", sedePaginadoDto.codigoSede);
@@ -692,10 +680,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             // Consulta SQL para obtener los calendarios para el año solicitado
             using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM calendario_academico WHERE EXTRACT(YEAR FROM fecha_inicio) = @anio OR EXTRACT(YEAR FROM fecha_fin) = @anio", connection);
@@ -723,10 +708,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria()
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             string query = @"
                 SELECT 
@@ -816,10 +798,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<EventoDTO>> GetEventos()
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using NpgsqlConnection connection = new(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             string query = "SELECT * FROM eventos";
 
@@ -862,10 +841,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using NpgsqlConnection connection = new(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             string query = "SELECT * FROM ubicaciones_evento WHERE \"EVENTO_ID\" = @eventoId";
 
@@ -894,10 +870,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            
-            using NpgsqlConnection connection = new(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
             
             string query = "SELECT * FROM obtener_obligaciones_pagadas_por_alumno(@idAlumnoParam)";
             
@@ -944,51 +917,67 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            var status = false;
+            await using var connection = await GetConnectionAsync();
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            // Validar que el idPago sea válido
+            if (imagenPagoDto.idPago <= 0)
             {
-              connection.Open();
-
-              string dml = $@"UPDATE pagos SET imagen = @imagen WHERE id_pago = @idPago";
-
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  cmd.Parameters.AddWithValue("@idPago", imagenPagoDto.idPago);
-                  cmd.Parameters.AddWithValue("@imagen", imagenPagoDto.imagen);
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                      status = true;
-                  }
-                  catch (Exception ex)
-                  {
-                     throw new Exception("error al actualizar");
-                  }
-              }
+                throw new ArgumentException("El ID del pago debe ser un número positivo.");
             }
 
-            return status;
+            if (string.IsNullOrWhiteSpace(imagenPagoDto.imagen))
+            {
+                throw new ArgumentException("La imagen no puede estar vacía.");
+            }
+
+            const string query = @"UPDATE pagos 
+                                  SET imagen = @imagen 
+                                  WHERE id_pago = @idPago";
+
+            using var cmd = new NpgsqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@idPago", imagenPagoDto.idPago);
+            cmd.Parameters.AddWithValue("@imagen", imagenPagoDto.imagen);
+            
+            try
+            {
+                var rowsAffected = await cmd.ExecuteNonQueryAsync();
+                
+                if (rowsAffected == 0)
+                {
+                    throw new InvalidOperationException($"No se encontró el pago con ID {imagenPagoDto.idPago} o no pertenece a la sede actual.");
+                }
+                
+                return true;
+            }
+            catch (PostgresException ex)
+            {
+                throw new InvalidOperationException($"Error de base de datos al actualizar la imagen del pago: {ex.MessageText}", ex);
+            }
+            catch (InvalidOperationException)
+            {
+                throw; // Re-lanzar la excepción de validación
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error al actualizar la imagen del pago.", ex);
+            }
         }
 
         public async Task<List<AlumnoDTO>> getAlumnoPorSede(SedePaginadoDTO listaAlumno)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaAlumnos = new List<AlumnoDTO>([]);
             int pagina = 0;
 
             if(listaAlumno.pagina > 1){
                 pagina = (listaAlumno.pagina - 1) * listaAlumno.itemsPorPagina;
             }
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
             cmd.Parameters.AddWithValue("codigoSede", listaAlumno.codigoSede);
             cmd.Parameters.AddWithValue("Pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", listaAlumno.itemsPorPagina);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
 
 
             while (reader.Read())
@@ -1020,10 +1009,8 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<AlumnoDTO>> filtrarAlumno(FiltroAlumnoDTO filtroAlumno)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaAlumnos = new List<AlumnoDTO>([]);
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
             int pagina = 0;
 
             if(filtroAlumno.pagina > 1){
@@ -1037,7 +1024,7 @@ namespace APIPostulaEnrolamiento.Funciones
             cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", filtroAlumno.itemsPorPagina);
 
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
 
 
             while (reader.Read())
@@ -1069,25 +1056,21 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> registrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
              if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
                 throw new ArgumentException("El numero de documento es obligatorio");
             }
             
-            using (var connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+            using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
+             @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
+             @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
             {
-                connection.Open();
-                using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
-                 @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
-                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
-                {
 
-                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
-                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
-                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
-                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
-                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
+                command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
+                command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
+                command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
+                command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
+                command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
                     command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
                     command.Parameters.AddWithValue("codigosede", alumnoRegistrarDto.codigoSede);
                     command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
@@ -1103,13 +1086,12 @@ namespace APIPostulaEnrolamiento.Funciones
 
                     try
                     {
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                     }
                     catch (Exception ex)
                     {
                        throw new ArgumentException("error al registrar");
                     }
-                }
             }
 
             return true;
@@ -1117,15 +1099,11 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
             if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
                 throw new ArgumentException("El numero de documento es obligatorio");
             }
             
-            using (var connection = new NpgsqlConnection(connectionString))
-            {
-                connection.Open();
+            await using var connection = await GetConnectionAsync();
                 using (var command = new NpgsqlCommand(@"CALL public.actualizar_usuario_alumno(@correo, @contraseña,
                  @nombre, @ap, @am, @telefono, @dni, @fechanacimiento, @direccion,
                  @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
@@ -1151,13 +1129,12 @@ namespace APIPostulaEnrolamiento.Funciones
 
                     try
                     {
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                     }
                     catch (Exception ex)
                     {
                        throw new Exception("error al actualizar");
                     }
-                }
             }
 
             return true;
@@ -1165,24 +1142,20 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> eliminarUsuarioAlumno(string numeroDocumento)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            await using var connection = await GetConnectionAsync();
             
-            using (var connection = new NpgsqlConnection(connectionString))
+            using (var command = new NpgsqlCommand(@"CALL eliminar_usuario_alumno(@numerodocumento)", connection))
             {
-                connection.Open();
-                using (var command = new NpgsqlCommand(@"CALL eliminar_usuario_alumno(@numerodocumento)", connection))
+
+                command.Parameters.AddWithValue("numerodocumento", numeroDocumento);
+
+                try
                 {
-
-                    command.Parameters.AddWithValue("numerodocumento", numeroDocumento);
-
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                       throw new Exception("error al eliminar");
-                    }
+                    await command.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   throw new Exception("error al eliminar");
                 }
             }
 
@@ -1191,65 +1164,67 @@ namespace APIPostulaEnrolamiento.Funciones
         
         public async Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            var status = false;
+            await using var connection = await GetConnectionAsync();
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            // Obtener el tenant actual
+            var codigoSede = _tenantService?.GetCurrentTenant();
+            if (string.IsNullOrWhiteSpace(codigoSede))
             {
-              await connection.OpenAsync();
+                throw new InvalidOperationException("No se pudo obtener el código de sede del contexto actual. Asegúrese de que el usuario esté autenticado.");
+            }
 
-            string query = @"INSERT INTO documentos
+            const string query = @"INSERT INTO documentos
                             (""ID_CATEGORIA_DOCUMENTO"", ""STATUS"", ""TITULO"", ""DESCRIPCION"", ""ENLACE"", ""SECUENCIA"",
                             ""DATE_CREATED"", ""TIPO_DOCUMENTO"", ""MAS_BUSCADOS"", ""SECUENCIA_MAS_BUSCADA"", ""DOCUMENTO_VER"",
                             ""INTERNO"", ""FECHA_ACTUALIZACION"", ""FECHA_INICIO"", ""FECHA_FIN"", ""DOCUMENTO_DESCARGA"",
-                            ""NOMBRE_DOCUMENTO"", ""TYPE"")
+                            ""NOMBRE_DOCUMENTO"", ""TYPE"", ""codigo_sede"")
                             VALUES
                             (@idCategoriaDocumento, @status, @titulo, @descripcion, @enlace, @secuencia, @dateCreated,
                             @tipoDocumento, @masBuscados, @secuenciaMasBuscada, @documentoVer, @interno, @fechaActualizacion,
-                            @fechaInicio, @fechaFin, @documentoDescarga, @nombreDocumento, @type)";
+                            @fechaInicio, @fechaFin, @documentoDescarga, @nombreDocumento, @type, @codigoSede)";
 
-              using (NpgsqlCommand cmd = new NpgsqlCommand(query, connection))
-              {
-                  cmd.Parameters.AddWithValue("@idCategoriaDocumento", documentoAddDto.IdCategoriaDocumento);
-                  cmd.Parameters.AddWithValue("@status", documentoAddDto.Status ?? "published");
-                  cmd.Parameters.AddWithValue("@titulo", documentoAddDto.Titulo ?? "Nuevo Documento");
-                  cmd.Parameters.AddWithValue("@descripcion", (object?)documentoAddDto.Descripcion ?? DBNull.Value);
-                  cmd.Parameters.AddWithValue("@enlace", (object?)documentoAddDto.Enlace ?? DBNull.Value);
-                  cmd.Parameters.AddWithValue("@secuencia", documentoAddDto.Secuencia ?? 0);
-                  cmd.Parameters.AddWithValue("@dateCreated", documentoAddDto.DateCreated ?? DateTime.Now);
-                  cmd.Parameters.AddWithValue("@tipoDocumento", documentoAddDto.TipoDocumento ?? "pdf");
-                  cmd.Parameters.AddWithValue("@masBuscados", documentoAddDto.MasBuscados);
-                  cmd.Parameters.AddWithValue("@secuenciaMasBuscada", documentoAddDto.SecuenciaMasBuscada ?? 0);
-                  cmd.Parameters.AddWithValue("@documentoVer", documentoAddDto.Documento ?? "");
-                  cmd.Parameters.AddWithValue("@interno", documentoAddDto.Interno);
-                  cmd.Parameters.AddWithValue("@fechaActualizacion", documentoAddDto.FechaActualizacion ?? DateTime.Now);
-                  cmd.Parameters.AddWithValue("@fechaInicio", documentoAddDto.FechaInicio ?? DateTime.Now);
-                  cmd.Parameters.AddWithValue("@fechaFin", documentoAddDto.FechaFin ?? DateTime.Now);
-                  cmd.Parameters.AddWithValue("@documentoDescarga", documentoAddDto.DocumentoDescarga ?? "");
-                  cmd.Parameters.AddWithValue("@nombreDocumento", documentoAddDto.Titulo ?? "Nuevo Documento");
-                  cmd.Parameters.AddWithValue("@type", documentoAddDto.Type ?? "application/pdf");
+            using var cmd = new NpgsqlCommand(query, connection);
+            
+            cmd.Parameters.AddWithValue("@idCategoriaDocumento", documentoAddDto.IdCategoriaDocumento);
+            cmd.Parameters.AddWithValue("@status", documentoAddDto.Status ?? "published");
+            cmd.Parameters.AddWithValue("@titulo", documentoAddDto.Titulo ?? "Nuevo Documento");
+            cmd.Parameters.AddWithValue("@descripcion", (object?)documentoAddDto.Descripcion ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@enlace", (object?)documentoAddDto.Enlace ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@secuencia", documentoAddDto.Secuencia ?? 0);
+            cmd.Parameters.AddWithValue("@dateCreated", documentoAddDto.DateCreated ?? DateTime.Now);
+            cmd.Parameters.AddWithValue("@tipoDocumento", documentoAddDto.TipoDocumento ?? "pdf");
+            cmd.Parameters.AddWithValue("@masBuscados", documentoAddDto.MasBuscados);
+            cmd.Parameters.AddWithValue("@secuenciaMasBuscada", documentoAddDto.SecuenciaMasBuscada ?? 0);
+            cmd.Parameters.AddWithValue("@documentoVer", documentoAddDto.Documento ?? "");
+            cmd.Parameters.AddWithValue("@interno", documentoAddDto.Interno);
+            cmd.Parameters.AddWithValue("@fechaActualizacion", documentoAddDto.FechaActualizacion ?? DateTime.Now);
+            cmd.Parameters.AddWithValue("@fechaInicio", documentoAddDto.FechaInicio ?? DateTime.Now);
+            cmd.Parameters.AddWithValue("@fechaFin", documentoAddDto.FechaFin ?? DateTime.Now);
+            cmd.Parameters.AddWithValue("@documentoDescarga", documentoAddDto.DocumentoDescarga ?? "");
+            cmd.Parameters.AddWithValue("@nombreDocumento", documentoAddDto.Titulo ?? "Nuevo Documento");
+            cmd.Parameters.AddWithValue("@type", documentoAddDto.Type ?? "application/pdf");
+            cmd.Parameters.AddWithValue("@codigoSede", codigoSede);
 
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                      status = true;
-                  }
-                  catch (Exception ex)
-                  {
-                     throw new Exception("Error al agregar el documento", ex);
-                  }
-              }
+            try
+            {
+                await cmd.ExecuteNonQueryAsync();
+                return true;
             }
-
-            return status;
+            catch (PostgresException ex)
+            {
+                throw new InvalidOperationException($"Error de base de datos al agregar el documento: {ex.MessageText}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error al agregar el documento. Verifique los datos proporcionados.", ex);
+            }
         }
 
         public async Task<List<GradoDTO>> GetGrados(string tipoInstitucion)
         {
             var grados = new List<GradoDTO>();
             
-            string connectionString = _configuration.GetConnectionString("DefaultConnection")!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string query = @"SELECT ""ID_GRADO"" AS IdGrado, ""NUMERO_GRADO"" AS NumeroGrado, ""DESCRIPCION_GRADO"" AS DescripcionGrado, ""NIVEL_EDUCATIVO"" AS NivelEducativo FROM public.grado WHERE tipo_institucion ILIKE @Institucion";
 
@@ -1259,15 +1234,13 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<CursoListarDTO>> ListarCursosPorSede(SedePaginadoDTO listaCurso)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaCursos = new List<CursoListarDTO>([]);
             int pagina = 0;
 
             if(listaCurso.pagina > 1){
                 pagina = (listaCurso.pagina - 1) * listaCurso.itemsPorPagina;
             }
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_cursos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
             cmd.Parameters.AddWithValue("codigoSede", listaCurso.codigoSede);
@@ -1295,10 +1268,8 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<CursoListarDTO>> FiltrarCurso(FiltroCursoDTO filtroCurso)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var listaCursos = new List<CursoListarDTO>([]);
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
             int pagina = 0;
 
             if(filtroCurso.pagina > 1){
@@ -1332,15 +1303,11 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> RegistrarCurso(CursoRegistrarDTO cursoRegistrarDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
              if(string.IsNullOrEmpty(cursoRegistrarDto.DescripcionCurso)){
                 throw new ArgumentException("El nombre del curso es obligatorio");
             }
             
-            using (var connection = new NpgsqlConnection(connectionString))
-            {
-                await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
                 using (var command = new NpgsqlCommand(@"CALL public.insertar_curso(@descripcion, @creditos,
                 @modalidad, @nivel, @codSede)", connection))
                 {
@@ -1362,7 +1329,6 @@ namespace APIPostulaEnrolamiento.Funciones
                     {
                         throw new InvalidOperationException($"Error al registrar el curso: {ex.Message}");
                     }
-                }
             }
 
             return true;
@@ -1370,8 +1336,6 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<Boolean> ActualizarCurso(CursoActualizarDTO cursoActualizarDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
              if(string.IsNullOrEmpty(cursoActualizarDto.DescripcionCurso)){
                 throw new ArgumentException("El nombre del curso es obligatorio");
             }
@@ -1381,9 +1345,7 @@ namespace APIPostulaEnrolamiento.Funciones
                 throw new ArgumentException("El id del curso debe ser un número positivo");
             }
             
-            using (var connection = new NpgsqlConnection(connectionString))
-            {
-                await connection.OpenAsync();
+            await using var connection = await GetConnectionAsync();
                 using (var command = new NpgsqlCommand(@"CALL public.actualizar_curso(@id, @descripcion, @creditos,
                 @modalidad, @nivel, @codSede)", connection))
                 {
@@ -1407,40 +1369,34 @@ namespace APIPostulaEnrolamiento.Funciones
                         throw new InvalidOperationException($"Error al actualizar el curso: {ex.Message}");
                     }
                 }
-            }
 
             return true;
         }
 
         public async Task<Boolean> EliminarCurso(int idCurso)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
             if (idCurso <= 0)
             {
                 throw new ArgumentException("El id del curso debe ser un número positivo");
             }
             
-            using (var connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+            using (var command = new NpgsqlCommand(@"CALL eliminar_curso(@idCurso)", connection))
             {
-                await connection.OpenAsync();
-                using (var command = new NpgsqlCommand(@"CALL eliminar_curso(@idCurso)", connection))
+
+                command.Parameters.AddWithValue("idCurso", idCurso);
+
+                try
                 {
-
-                    command.Parameters.AddWithValue("idCurso", idCurso);
-
-                    try
-                    {
-                        await command.ExecuteNonQueryAsync();
-                    }
-                    catch (PostgresException ex)
-                    {
-                       throw new ArgumentException(ex.MessageText);
-                    }
-                    catch (Exception ex)
-                    {
-                       throw new InvalidOperationException($"Error al eliminar el curso: {ex.Message}");
-                    }
+                    await command.ExecuteNonQueryAsync();
+                }
+                catch (PostgresException ex)
+                {
+                   throw new ArgumentException(ex.MessageText);
+                }
+                catch (Exception ex)
+                {
+                   throw new InvalidOperationException($"Error al eliminar el curso: {ex.Message}");
                 }
             }
 
@@ -1449,8 +1405,7 @@ namespace APIPostulaEnrolamiento.Funciones
 
         public async Task<List<ReporteMatriculaColegioDTO>> getCursosAlumno(int idAlumno)
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection")!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string sql = @"
                 SELECT DISTINCT ON (mc.id_curso)

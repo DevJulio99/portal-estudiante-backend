@@ -1,12 +1,13 @@
 using MyPortalStudent.Utils;
 using Microsoft.AspNetCore.Mvc;
 using MyPortalStudent.Domain;
+using MyPortalStudent.Domain.Ifunciones;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using MyPortalStudent.Domain.DTOs;
 using System.Text.RegularExpressions;
 
-namespace JwtLoginService
+namespace MyPortalStudent.Controllers
 {
     [ApiController]
     [Route("api/auth")]
@@ -112,12 +113,18 @@ namespace JwtLoginService
             if (principal == null)
                 return Unauthorized();
 
+            // Extraer todos los campos del token anterior, incluyendo Codigo_Sede
             var user = new UserDto
             {
-                Email = principal.FindFirstValue("Email"),
-                Name = principal.FindFirstValue("Name"),
-                Phone = principal.FindFirstValue("Phone"),
-                Role = principal.FindFirstValue("Role")
+                Id = int.TryParse(principal.FindFirstValue("Id"), out var id) ? id : 0,
+                Email = principal.FindFirstValue("Email") ?? "",
+                Name = principal.FindFirstValue("Name") ?? "",
+                Phone = principal.FindFirstValue("Phone") ?? "",
+                Role = principal.FindFirstValue("Role") ?? "",
+                Dni_Usuario = principal.FindFirstValue("Dni_Usuario") ?? "",
+                Codigo_Sede = principal.FindFirstValue("Codigo_Sede") ?? "",
+                Id_Alumno = principal.FindFirstValue("Id_Alumno") ?? "0",
+                Tipo_Institucion = principal.FindFirstValue("Tipo_Institucion") ?? "0"
             };
 
             var newAccessToken = _authService.GenerateJwtToken(user, 1);

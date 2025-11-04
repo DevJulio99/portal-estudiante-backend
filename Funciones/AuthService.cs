@@ -2,25 +2,45 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Dapper;
-using JwtLoginService;
 using Microsoft.IdentityModel.Tokens;
 using MyPortalStudent.Domain;
+using MyPortalStudent.Domain.Ifunciones;
+using MyPortalStudent.Domain.IServices;
+using MyPortalStudent.Utils;
 using Npgsql;
 
-namespace APIPostulaEnrolamiento.Funciones
+namespace MyPortalStudent.Funciones
 {
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
+        private readonly ITenantService? _tenantService;
 
-        public AuthService(IConfiguration configuration)
+        public AuthService(IConfiguration configuration, ITenantService? tenantService = null)
         {
             _configuration = configuration;
+            _tenantService = tenantService;
+        }
+
+        /// <summary>
+        /// Crea una conexión y establece el tenant automáticamente
+        /// Nota: Para el login, no necesitamos establecer el tenant porque el usuario aún no está autenticado
+        /// </summary>
+        private async Task<NpgsqlConnection> GetConnectionAsync(bool setTenant = true)
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connection = new NpgsqlConnection(connectionString);
+            if (setTenant && _tenantService != null)
+            {
+                await connection.SetTenantIfAvailableAsync(_tenantService);
+            }
+            return connection;
         }
 
         public async Task<UserDto> ValidateUserAsync(LoginRequestDto loginRequest)
         {
-            using var connection = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            // Para el login, no establecemos el tenant porque aún no conocemos el código de sede del usuario
+            await using var connection = await GetConnectionAsync(setTenant: false);
             const string query = @"SELECT Id, Email, Name, Phone, Dni_Usuario, Role, Codigo_Sede, s.Tipo_Institucion, (select id_alumno from alumno where dni = u.Dni_Usuario) as Id_Alumno
              FROM Users u INNER JOIN Sede s USING(Codigo_Sede)
              WHERE Email = @Email AND Password = @Password AND Activo = true";

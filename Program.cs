@@ -1,6 +1,6 @@
 using System.Threading.RateLimiting;
-using APIPostulaEnrolamiento.Funciones;
-using JwtLoginService;
+using MyPortalStudent.Funciones;
+using MyPortalStudent.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Dapper;
 using Microsoft.AspNetCore.Hosting;
@@ -26,7 +26,15 @@ builder.Services.AddCors(opciones =>
 {
     opciones.AddPolicy("validarConsumo", configuracion =>
     {        
-        configuracion.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        // Permitir cualquier origen en desarrollo
+        // En producción, especificar los orígenes permitidos
+        configuracion
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        
+        // Nota: AllowAnyOrigin() no permite credenciales (cookies, headers de auth)
+        // Si necesitas enviar credenciales, usa WithOrigins() en lugar de AllowAnyOrigin()
     });
 });
 
@@ -59,6 +67,12 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddSingleton<IRedisDB, RedisDB>();
 
+// Registrar HttpContextAccessor para acceder al HttpContext en servicios
+builder.Services.AddHttpContextAccessor();
+
+// Registrar servicios de tenant
+builder.Services.AddScoped<ITenantService, TenantService>();
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -70,9 +84,36 @@ builder.Services.AddSwaggerGen(
         {
             Version = "v1",
             Title = "API-Portal-Estudiante",
-            Description = "Servicio."
+            Description = "Servicio con soporte Multitenant. El tenant se establece automáticamente desde el claim 'Codigo_Sede' del token JWT."
         }
         );
+        
+        // Configurar seguridad JWT Bearer para Swagger
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header usando el esquema Bearer. Ingresa 'Bearer' [espacio] y luego tu token JWT. Ejemplo: \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer",
+            BearerFormat = "JWT"
+        });
+
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+
         // var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 
@@ -90,7 +131,13 @@ var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
+// CORS debe ejecutarse ANTES del middleware de tenant
+// para que los preflight requests (OPTIONS) puedan pasar
 app.UseCors("validarConsumo");
+
+// Middleware de tenant - debe ejecutarse después de CORS pero antes de los controladores
+app.UseMiddleware<MyPortalStudent.Middleware.TenantMiddleware>();
+
 app.UseRateLimiter();
 
 app.UseSwagger();

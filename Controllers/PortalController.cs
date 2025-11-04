@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MyPortalStudent.Domain;
 using MyPortalStudent.Domain.Ifunciones;
+using MyPortalStudent.Utils;
+using System.Security.Claims;
 
 namespace MyPortalStudent.Controllers
 {
@@ -28,6 +30,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("AlumnosxId/{numDocUsuario}")]
         public async Task<ActionResult> GetAlumnosId(string? numDocUsuario)
         {
+            // Validar autorización: el usuario solo puede ver sus propios datos o ser Admin/Docente
+            if (!AuthorizationHelper.CanAccessAlumnoByDni(User, numDocUsuario))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos. Solo puede consultar su propio perfil."
+                });
+            }
+
             var data = await _funcionesApi.getAlumnosId(numDocUsuario);
             if (data.Count == 0)
             {
@@ -40,6 +52,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("HorarioxId/{idAlum}/{fechaInicio}/{fechaFin}")]
         public async Task<ActionResult> GetHorarioId(int idAlum, string fechaInicio, string fechaFin)
         {
+            // Validar autorización
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlum))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getHorarioId(idAlum, fechaInicio, fechaFin);
             if (data.Count == 0)
             {
@@ -52,6 +74,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("CursosxId/{idAlum}")]
         public async Task<ActionResult> GetCursos(int idAlum)
         {
+            // Validar autorización
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlum))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getCursos(idAlum);
             if (data.Count == 0)
             {
@@ -65,6 +97,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("CursosColegioxId/{idAlum}/{anio}/{codPeriodo}")]
         public async Task<ActionResult> GetCursosColegio(int idAlum, int anio, string codPeriodo)
         {
+            // Validar autorización
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlum))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getCursosColegio(idAlum, anio, codPeriodo);
             if (data.Count == 0)
             {
@@ -77,6 +119,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("Asistencias/{idAlum}/{codCurso}")]
         public async Task<ActionResult> GetAsistenciaAlumno(int idAlum, string codCurso)
         {
+            // Validar autorización
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlum))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getAsistenciasAlumno(idAlum, codCurso);
             if (data.Count == 0)
             {
@@ -101,6 +153,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("HorariosCursosxAlumno/{idAlumno}")]
         public async Task<ActionResult> GetHorariosCursoxAlumno(int idAlumno)
         {
+            // Validar autorización
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlumno))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getHorariosCursoxAlumno(idAlumno);
             if (data.Count == 0)
             {
@@ -125,6 +187,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("NotasxBimestre/{idAlum}/{anio}/{codCurso}/{codSubperiodo}")]
         public async Task<ActionResult> GetNotasxBimestre(int idAlum, int anio, string codCurso, string codSubperiodo)
         {
+            // Validar autorización - las notas son datos muy sensibles
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlum))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var data = await _funcionesApi.getNotasxBimestre(idAlum, anio, codCurso, codSubperiodo);
             if (data.Count == 0)
             {
@@ -137,6 +209,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("alumno/pagos-pendientes/{id}/{anio}")]
         public async Task<IActionResult> GetPagosPorAlumno(int id, int anio)
         {
+            // Validar autorización - los pagos son datos financieros sensibles
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, id))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var pagos = await _funcionesApi.getPagosPorAlumno(id, anio);
             
             if (pagos == null || pagos.Count == 0)
@@ -150,6 +232,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("resumen-pagos-alumno/{id}/{anio}")]
         public async Task<IActionResult> GetResumenPagosPorAlumno(int id, int anio)
         {
+            // Validar autorización - los pagos son datos financieros sensibles
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, id))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var resumen = await _funcionesApi.GetResumenPagosPorAlumno(id, anio);
 
             if (resumen == null || !resumen.Any())
@@ -174,6 +266,15 @@ namespace MyPortalStudent.Controllers
         [HttpGet("DocumentosConCategoria")]
         public async Task<ActionResult> GetDocumentosConCategoria()
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Se requiere autenticación para acceder a este recurso."
+                });
+            }
+            
             var data = await _funcionesApi.GetDocumentosConCategoria();
 
             if (data == null || !data.Any())
@@ -201,6 +302,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("ObtenerObligacionesPagadas/{idAlumno}")]
         public async Task<IActionResult> ObtenerObligacionesPagadas(int idAlumno)
         {
+            // Validar autorización - las obligaciones son datos financieros sensibles
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlumno))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos."
+                });
+            }
+
             var obligaciones = await _funcionesApi.GetObligacionesPagadas(idAlumno);
 
             if (obligaciones == null || obligaciones.Count == 0)
@@ -356,6 +467,16 @@ namespace MyPortalStudent.Controllers
         [HttpGet("cursos-alumno/{idAlumno}")]
         public async Task<IActionResult> GetCursosAlumno(int idAlumno)
         {
+            // Validar autorización: el usuario solo puede ver sus propios datos o ser Admin/Docente
+            if (!AuthorizationHelper.CanAccessAlumnoData(User, idAlumno))
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tiene permiso para acceder a estos datos. Solo puede consultar sus propios cursos."
+                });
+            }
+
             var cursos = await _funcionesApi.getCursosAlumno(idAlumno);
 
             if (cursos == null || !cursos.Any())

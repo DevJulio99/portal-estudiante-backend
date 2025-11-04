@@ -1,6 +1,7 @@
 ﻿using MyPortalStudent.Domain.DTOs.CompetenciasGenerales;
 using MyPortalStudent.Domain.IServices;
 using MyPortalStudent.Domain;
+using MyPortalStudent.Utils;
 using Npgsql;
 using System.Data;
 using System.Text.Json;
@@ -10,16 +11,29 @@ namespace MyPortalStudent.Services
     public class CompetenciasGeneralesService : ICompetenciasGeneralesService
     {
         public readonly IConfiguration _configuration;
+        private readonly ITenantService? _tenantService;
 
         public CompetenciasGeneralesService(
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ITenantService? tenantService = null)
         {
             _configuration = configuration;
+            _tenantService = tenantService;
+        }
+
+        /// <summary>
+        /// Crea una conexión y establece el tenant automáticamente
+        /// </summary>
+        private async Task<NpgsqlConnection> GetConnectionAsync()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connection = new NpgsqlConnection(connectionString);
+            await connection.SetTenantIfAvailableAsync(_tenantService);
+            return connection;
         }
 
         public async Task<int> ExamenAleatorio(GenerarExamenDTO request)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             int rowAffected = 0;
             int status = 0;
 
@@ -33,10 +47,9 @@ namespace MyPortalStudent.Services
               throw new Exception("El id de competencia no existe");
             }
             
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)){
-               connection.Open();
+            await using var connection = await GetConnectionAsync();
 
-               using(var cmd = new NpgsqlCommand("generar_examen_aleatorio_competencia_grado", connection)){
+            using(var cmd = new NpgsqlCommand("generar_examen_aleatorio_competencia_grado", connection)){
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@p_id_postulante", request.idPostulante);
                 cmd.Parameters.AddWithValue("@p_numero_preguntas", request.numeroPreguntas);
@@ -45,7 +58,7 @@ namespace MyPortalStudent.Services
 
                  try
                  {
-                     rowAffected = cmd.ExecuteNonQuery();
+                     rowAffected = await cmd.ExecuteNonQueryAsync();
                      status = 1;
                  }
                  catch (Exception ex)
@@ -56,8 +69,6 @@ namespace MyPortalStudent.Services
                      status = 3;
                     }
                  }
-                }
-                connection.Close();
             }
 
             return status;
@@ -65,10 +76,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<ExamenDTO>> listarExamen(int idPostulante, int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand(
                 $@"select e.*,p.*, c.""NOMBRE_COMPETENCIA"" from examen_generado 
@@ -77,7 +85,7 @@ namespace MyPortalStudent.Services
                    where ""ID_POSTULANTE"" = {idPostulante}
                    AND e.""ID_COMPETENCIA"" = {idCompetencia}
                    order by e.""ORDEN_PREGUNTA""", connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var listaExamen = new List<ExamenDTO>([]);
             var listaGrupos = new List<ListaGruposDTO>([]);
             var numeroPregunta = 1;
@@ -147,13 +155,10 @@ namespace MyPortalStudent.Services
 
         public async Task<List<CompetenciaDTO>> listarCompetencias(int idPostulante)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using NpgsqlCommand cmd = new NpgsqlCommand(@"SELECT cp.*, ct.""TIEMPO_LIMITE"", ct.""NUMERO_PREGUNTAS"" FROM competencia cp inner join criterio_evaluacion ct USING(""ID_COMPETENCIA"") order by ""ID_COMPETENCIA""", connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var competencias = new List<CompetenciaDTO>([]);
 
             while (reader.Read())
@@ -188,19 +193,17 @@ namespace MyPortalStudent.Services
 
         public async Task<List<BaseCompetenciaDTO>> listarCompetenciasFinalizadas(int idPostulante)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var competencias = new List<BaseCompetenciaDTO>([]);
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString)){
-                connection.Open();
-                using (NpgsqlCommand cmd = new NpgsqlCommand(@"select c.""ID_COMPETENCIA"",c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
-                                    c.""URL_IMAGEN"", ec.""TIEMPO_FINALIZADO""
-                                    from estado_competencia ec
-                                    inner join competencia c USING(""ID_COMPETENCIA"")
-                                    where ""ID_POSTULANTE"" = @idPostulante AND ec.""ESTADO"" = 'F'", connection)){
+            await using var connection = await GetConnectionAsync();
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@"select c.""ID_COMPETENCIA"",c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
+                                c.""URL_IMAGEN"", ec.""TIEMPO_FINALIZADO""
+                                from estado_competencia ec
+                                inner join competencia c USING(""ID_COMPETENCIA"")
+                                where ""ID_POSTULANTE"" = @idPostulante AND ec.""ESTADO"" = 'F'", connection)){
  
-                    cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
-                    using (NpgsqlDataReader reader = cmd.ExecuteReader()){
+                cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync()){
                        while (reader.Read())
                        {
                            competencias.Add(new BaseCompetenciaDTO()
@@ -213,7 +216,6 @@ namespace MyPortalStudent.Services
                            });
                        }
                     }
-                }
             }
              
             return competencias;
@@ -221,7 +223,6 @@ namespace MyPortalStudent.Services
 
         public async Task<Boolean> ActualizarRespuesta(RespuestaReq request)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             List<string> parts = new List<string> { "a", "b", "c", "d" };
 
             if (request.idPostulante.Equals(0) || request.idPregunta.Equals(0))
@@ -235,24 +236,21 @@ namespace MyPortalStudent.Services
                 throw new Exception("La respuesta debe ser A,B,C o D");
             }
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
-            NpgsqlCommand cmd = new NpgsqlCommand("actualizar_respuesta", connection);
+            using NpgsqlCommand cmd = new NpgsqlCommand("actualizar_respuesta", connection);
             cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@p_respuesta_seleccionada", request.respuestSeleccionada.ToUpper());
             cmd.Parameters.AddWithValue("@p_id_postulante", request.idPostulante);
             cmd.Parameters.AddWithValue("@p_id_pregunta", request.idPregunta);
 
-            connection.Open();
-            int rowAffected = cmd.ExecuteNonQuery();
-            connection.Close();
+            int rowAffected = await cmd.ExecuteNonQueryAsync();
 
             return true;
         }
         
         public async Task<Boolean> CompetenciaCompleta(int idPostulante, int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean completado = false;
 
             if (idPostulante.Equals(0) || idCompetencia.Equals(0))
@@ -260,11 +258,10 @@ namespace MyPortalStudent.Services
                 throw new Exception((idPostulante.Equals(0) ? "idPostulante" : "idCompetencia") + " no puede ser 0.");
             }
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
-            connection.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand($@"select * from examen_generado where ""ID_POSTULANTE"" = {idPostulante} and ""ID_COMPETENCIA"" = {idCompetencia}", connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from examen_generado where ""ID_POSTULANTE"" = {idPostulante} and ""ID_COMPETENCIA"" = {idCompetencia}", connection);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var examenes = new List<ExamenGeneradoDTO>([]);
 
             while (reader.Read())
@@ -287,22 +284,19 @@ namespace MyPortalStudent.Services
 
         public async Task<List<PostulanteDTO>> listarPostulante(string? dniPostulante)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-
             if (string.IsNullOrEmpty(dniPostulante))
             {
                 throw new Exception("dniPostulante es obligatorio.");
             }
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
-            connection.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand($@"select p.""ID_POSTULANTE"", p.""DNI"", p.""NOMBRE"", p.""APELLIDO"",
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"select p.""ID_POSTULANTE"", p.""DNI"", p.""NOMBRE"", p.""APELLIDO"",
                                          p.""CORREO"", p.""CELULAR"", p.""ESTADO"", a.id_grado
                                          from alumno a
                                          inner join postulante p ON a.dni = p.""DNI""
                                          where p.""DNI"" = '{dniPostulante}'", connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var postulante = new List<PostulanteDTO>([]);
 
             while (reader.Read())
@@ -326,7 +320,6 @@ namespace MyPortalStudent.Services
 
         public async Task<Boolean> registrarPostulante(RegistrarPostulanteDTO postulanteDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean status = false;
 
             var listaPostulante = await listarPostulante(postulanteDto.dni);
@@ -335,41 +328,36 @@ namespace MyPortalStudent.Services
                 throw new Exception("El postulante ingresado ya esta registrado.");
             }
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            string dml = @"insert into postulante (""DNI"", ""NOMBRE"", ""APELLIDO"", ""CORREO"", ""ESTADO"") values (:DNI, :NOM, :APE, :COR, :EST)";
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
-              connection.Open();
+                cmd.Parameters.AddWithValue("DNI", postulanteDto.dni);
+                cmd.Parameters.AddWithValue("NOM", postulanteDto.nombre);
+                cmd.Parameters.AddWithValue("APE", postulanteDto.apellido);
+                cmd.Parameters.AddWithValue("COR", postulanteDto.correo);
+                cmd.Parameters.AddWithValue("EST", postulanteDto.estado);
 
-              string dml = @"insert into postulante (""DNI"", ""NOMBRE"", ""APELLIDO"", ""CORREO"", ""ESTADO"") values (:DNI, :NOM, :APE, :COR, :EST)";
-
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  cmd.Parameters.AddWithValue("DNI", postulanteDto.dni);
-                  cmd.Parameters.AddWithValue("NOM", postulanteDto.nombre);
-                  cmd.Parameters.AddWithValue("APE", postulanteDto.apellido);
-                  cmd.Parameters.AddWithValue("COR", postulanteDto.correo);
-                  cmd.Parameters.AddWithValue("EST", postulanteDto.estado);
-
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                  }
-                  catch (Exception ex)
-                  {
-                     throw new Exception(ex.Message);
-                  }
-              }
+                try
+                {
+                    var result = await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   throw new Exception(ex.Message);
+                }
             }
             return status;
         }
 
         public async Task<List<UltimaActividadDTO>> ultimaActividadXPostulante(int idPostulante, int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
-            connection.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand($@"select * from ultima_actividad where ""ID_POSTULANTE"" = '{idPostulante}' and ""ID_COMPETENCIA"" = {idCompetencia}", connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from ultima_actividad where ""ID_POSTULANTE"" = '{idPostulante}' and ""ID_COMPETENCIA"" = {idCompetencia}", connection);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var lista = new List<UltimaActividadDTO>([]);
 
             while (reader.Read())
@@ -387,58 +375,50 @@ namespace MyPortalStudent.Services
 
         public async Task<Boolean> insertarActividadPostulante(UltimaActividadDTO ultimaActividadDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean status = true;
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            string dml = @"insert into ultima_actividad (""ID_POSTULANTE"",""ID_COMPETENCIA"", ""FECHA_ULTIMA_ACTIVIDAD"", ""HORA_ULTIMA_ACTIVIDAD"") values (:IDP, :IDC, :FULT, :HULT)";
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
-              connection.Open();
+                cmd.Parameters.AddWithValue("IDP", ultimaActividadDto.idPostulante);
+                cmd.Parameters.AddWithValue("IDC", ultimaActividadDto.idCompetencia);
+                cmd.Parameters.AddWithValue("FULT", DateTime.Parse(ultimaActividadDto.fechaUltimaActividad));
+                cmd.Parameters.AddWithValue("HULT", TimeSpan.Parse(ultimaActividadDto.horaUltimaActividad));
 
-              string dml = @"insert into ultima_actividad (""ID_POSTULANTE"",""ID_COMPETENCIA"", ""FECHA_ULTIMA_ACTIVIDAD"", ""HORA_ULTIMA_ACTIVIDAD"") values (:IDP, :IDC, :FULT, :HULT)";
-
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  cmd.Parameters.AddWithValue("IDP", ultimaActividadDto.idPostulante);
-                  cmd.Parameters.AddWithValue("IDC", ultimaActividadDto.idCompetencia);
-                  cmd.Parameters.AddWithValue("FULT", DateTime.Parse(ultimaActividadDto.fechaUltimaActividad));
-                  cmd.Parameters.AddWithValue("HULT", TimeSpan.Parse(ultimaActividadDto.horaUltimaActividad));
-
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                  }
-                  catch (Exception ex)
-                  {
-                     status = false;
-                  }
-              }
+                try
+                {
+                    var result = await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   status = false;
+                }
             }
             return status;
         }
 
         public async Task<Boolean> actualizarActividadPostulante(UltimaActividadDTO ultimaActividadDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean status = true;
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
-            {
-              connection.Open();
+            await using var connection = await GetConnectionAsync();
 
-              string dml = $@"update ultima_actividad set ""FECHA_ULTIMA_ACTIVIDAD"" = '{ultimaActividadDto.fechaUltimaActividad}',
+            string dml = $@"update ultima_actividad set ""FECHA_ULTIMA_ACTIVIDAD"" = '{ultimaActividadDto.fechaUltimaActividad}',
                            ""HORA_ULTIMA_ACTIVIDAD"" = '{ultimaActividadDto.horaUltimaActividad}' where ""ID_POSTULANTE"" = {ultimaActividadDto.idPostulante} and ""ID_COMPETENCIA"" = {ultimaActividadDto.idCompetencia}";
 
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                  }
-                  catch (Exception ex)
-                  {
-                     status = false;
-                  }
-              }
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
+            {
+                try
+                {
+                    var result = await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   status = false;
+                }
             }
             return status;
         }
@@ -461,22 +441,19 @@ namespace MyPortalStudent.Services
 
         public async Task<List<UltimaRespuestaExamenDTO>> getUltimaRespuestaExamen(int idPostulante, int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             var lista = new List<UltimaRespuestaExamenDTO>([]);
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
-            {
-              connection.Open();
+            await using var connection = await GetConnectionAsync();
 
-              string dml = $@"select * from examen_generado 
+            string dml = $@"select * from examen_generado 
                               where ""TIEMPO_RESPUESTA"" = (select max(""TIEMPO_RESPUESTA"") from examen_generado where ""ID_POSTULANTE"" = {idPostulante} and 
                               ""ID_COMPETENCIA"" = {idCompetencia})";
 
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  try
-                  {
-                    using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
+            {
+                try
+                {
+                    using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
                     while (reader.Read())
                     {
                         lista.Add(new UltimaRespuestaExamenDTO{
@@ -486,11 +463,10 @@ namespace MyPortalStudent.Services
                         });
                     }
                   }
-                  catch (Exception ex)
-                  {
-                     
-                  }
-              }
+                catch (Exception ex)
+                {
+                   
+                }
             }
             return lista;
         }
@@ -531,18 +507,16 @@ namespace MyPortalStudent.Services
 
         public async Task<List<ListaEstadoCompetenciaDTO>> listarEstadoCompetencia(int idPostulante, int? idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             string queryDb = "";
             if(idCompetencia == null){
                 queryDb = @$"select * from estado_competencia where ""ID_POSTULANTE"" = '{idPostulante}'";
             }else {
                 queryDb = @$"select * from estado_competencia where ""ID_POSTULANTE"" = '{idPostulante}' and ""ID_COMPETENCIA"" = {idCompetencia}";
             }
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
-            connection.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand(queryDb, connection);
-            using NpgsqlDataReader reader = cmd.ExecuteReader();
+            using NpgsqlCommand cmd = new NpgsqlCommand(queryDb, connection);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             var lista = new List<ListaEstadoCompetenciaDTO>([]);
 
             while (reader.Read())
@@ -561,7 +535,6 @@ namespace MyPortalStudent.Services
 
         public async Task<Boolean> registrarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean status = true;
 
             var listaEstados = await listarEstadoCompetencia(estadoCompetenciaDto.idPostulante, estadoCompetenciaDto.idCompetencia);
@@ -576,34 +549,30 @@ namespace MyPortalStudent.Services
                 }
             }
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            string dml = @"insert into estado_competencia (""ID_COMPETENCIA"", ""ID_POSTULANTE"", ""ESTADO"", ""TIEMPO_INICIADO"") values (:IDC, :IDP, :EST, current_timestamp  at time zone 'America/Lima')";
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
-              connection.Open();
+                cmd.Parameters.AddWithValue("IDP", estadoCompetenciaDto.idPostulante);
+                cmd.Parameters.AddWithValue("IDC", estadoCompetenciaDto.idCompetencia);
+                cmd.Parameters.AddWithValue("EST",  !string.IsNullOrEmpty(estadoCompetenciaDto.estado) ? estadoCompetenciaDto.estado.ToUpper() : null);
 
-              string dml = @"insert into estado_competencia (""ID_COMPETENCIA"", ""ID_POSTULANTE"", ""ESTADO"", ""TIEMPO_INICIADO"") values (:IDC, :IDP, :EST, current_timestamp  at time zone 'America/Lima')";
-
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  cmd.Parameters.AddWithValue("IDP", estadoCompetenciaDto.idPostulante);
-                  cmd.Parameters.AddWithValue("IDC", estadoCompetenciaDto.idCompetencia);
-                  cmd.Parameters.AddWithValue("EST",  !string.IsNullOrEmpty(estadoCompetenciaDto.estado) ? estadoCompetenciaDto.estado.ToUpper() : null);
-
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                  }
-                  catch (Exception ex)
-                  {
-                     status = false;
-                  }
-              }
+                try
+                {
+                    var result = await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   status = false;
+                }
             }
             return status;
         }
 
         public async Task<Boolean> actualizarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean status = true;
 
              if(estadoCompetenciaDto.estado != null){
@@ -612,42 +581,37 @@ namespace MyPortalStudent.Services
                 }
             }
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            string dml = $@"update estado_competencia set ""ESTADO"" = 'F', ""TIEMPO_FINALIZADO"" = current_timestamp  at time zone 'America/Lima' where ""ID_POSTULANTE"" = {estadoCompetenciaDto.idPostulante} and ""ID_COMPETENCIA"" = {estadoCompetenciaDto.idCompetencia}";
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
-              connection.Open();
-
-              string dml = $@"update estado_competencia set ""ESTADO"" = 'F', ""TIEMPO_FINALIZADO"" = current_timestamp  at time zone 'America/Lima' where ""ID_POSTULANTE"" = {estadoCompetenciaDto.idPostulante} and ""ID_COMPETENCIA"" = {estadoCompetenciaDto.idCompetencia}";
-
-              using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
-              {
-                  try
-                  {
-                      var result = cmd.ExecuteNonQuery();
-                  }
-                  catch (Exception ex)
-                  {
-                     status = false;
-                  }
-              }
+                try
+                {
+                    var result = await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                   status = false;
+                }
             }
             return status;
         }
 
         public async Task<Boolean> alumnoHabilitado(string? dniAlumno)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean existe = false;
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(@"SELECT 1 FROM alumno 
             WHERE dni = @dniAlum AND habilitado_prueba = true LIMIT 1", connection))
             {
                 cmd.Parameters.AddWithValue("@dniAlum", dniAlumno);
-                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         existe = true;
                     }
@@ -659,19 +623,17 @@ namespace MyPortalStudent.Services
 
         public async Task<Boolean> existeCompetencia(int? idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean existe = false;
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from competencia
                    where ""ID_COMPETENCIA"" = @idCompetencia", connection))
             {
                 cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
-                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         existe = true;
                     }
@@ -683,11 +645,9 @@ namespace MyPortalStudent.Services
 
          public async Task<Boolean> competenciaTerminada(int? idCompetencia, int idPostulante)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             Boolean existe = false;
 
-            using NpgsqlConnection connection = new NpgsqlConnection(connectionString);
-            connection.Open();
+            await using var connection = await GetConnectionAsync();
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(@"select 1 from estado_competencia
                   where ""ID_COMPETENCIA"" = @idCompetencia AND ""ID_POSTULANTE"" = @idPostulante
@@ -695,9 +655,9 @@ namespace MyPortalStudent.Services
             {                  
                 cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
                 cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
-                using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         existe = true;
                     }
@@ -709,37 +669,33 @@ namespace MyPortalStudent.Services
 
         public async Task<List<ResultadoCompetenciaDTO>> listaResultadoCompetencias(int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             List<ResultadoCompetenciaDTO> lista = new List<ResultadoCompetenciaDTO>();
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select c.""ID_COMPETENCIA"", c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
+            cr.""PUNTAJE_MINIMO_APROBATORIO"", cr.""PUNTAJE_POR_PREGUNTA"",
+            cr.""PESO"" from competencia c
+            INNER JOIN criterio_evaluacion cr USING(""ID_COMPETENCIA"")
+            WHERE ""ID_COMPETENCIA"" = @idCompetencia", connection))
             {
-                connection.Open();
-
-                using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select c.""ID_COMPETENCIA"", c.""NOMBRE_COMPETENCIA"", c.""DESCRIPCION"",
-                cr.""PUNTAJE_MINIMO_APROBATORIO"", cr.""PUNTAJE_POR_PREGUNTA"",
-                cr.""PESO"" from competencia c
-                INNER JOIN criterio_evaluacion cr USING(""ID_COMPETENCIA"")
-                WHERE ""ID_COMPETENCIA"" = @idCompetencia", connection))
+                cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
-                    cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
-                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    while (await reader.ReadAsync())
                     {
-                        while (reader.Read())
+                        lista.Add(new ResultadoCompetenciaDTO
                         {
-                            lista.Add(new ResultadoCompetenciaDTO
-                            {
-                                idCompetencia = (int)reader["ID_COMPETENCIA"],
-                                nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
-                                descripcion = reader["DESCRIPCION"].ToString() ?? "",
-                                puntajeMinimoAprobatorio = (Decimal)reader["PUNTAJE_MINIMO_APROBATORIO"],
-                                puntajePorPregunta = (Decimal)reader["PUNTAJE_POR_PREGUNTA"],
-                                peso = (Decimal)reader["PESO"],
-                            });
-                        }
+                            idCompetencia = (int)reader["ID_COMPETENCIA"],
+                            nombreCompetencia = reader["NOMBRE_COMPETENCIA"].ToString() ?? "",
+                            descripcion = reader["DESCRIPCION"].ToString() ?? "",
+                            puntajeMinimoAprobatorio = (Decimal)reader["PUNTAJE_MINIMO_APROBATORIO"],
+                            puntajePorPregunta = (Decimal)reader["PUNTAJE_POR_PREGUNTA"],
+                            peso = (Decimal)reader["PESO"],
+                        });
                     }
-
                 }
+
             }
 
 
@@ -748,38 +704,34 @@ namespace MyPortalStudent.Services
 
         public async Task<List<ResultadoPreguntaDTO>> listaResultadoPreguntas(int idPostulante, int idCompetencia)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
             string total = "0";
             List<ResultadoPreguntaDTO> lista = new List<ResultadoPreguntaDTO>();
 
-            using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
+            await using var connection = await GetConnectionAsync();
+
+            using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select e.""ID_PREGUNTA"",e.""ORDEN_PREGUNTA"", 
+            CASE WHEN e.""RESPUESTA_SELECCIONADA"" = p.""RESPUESTA_CORRECTA"" THEN 1
+            WHEN e.""RESPUESTA_SELECCIONADA"" <> p.""RESPUESTA_CORRECTA"" THEN 2
+            ELSE 0 END as ""ESTADO"" from examen_generado e
+            inner join pregunta p USING(""ID_PREGUNTA"")
+            where e.""ID_POSTULANTE"" = @idPostulante and e.""ID_COMPETENCIA"" = @idCompetencia ORDER BY e.""ORDEN_PREGUNTA""", connection))
             {
-                connection.Open();
+                cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
+                cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
 
-                using (NpgsqlCommand cmd = new NpgsqlCommand(@$"select e.""ID_PREGUNTA"",e.""ORDEN_PREGUNTA"", 
-                CASE WHEN e.""RESPUESTA_SELECCIONADA"" = p.""RESPUESTA_CORRECTA"" THEN 1
-                WHEN e.""RESPUESTA_SELECCIONADA"" <> p.""RESPUESTA_CORRECTA"" THEN 2
-                ELSE 0 END as ""ESTADO"" from examen_generado e
-                inner join pregunta p USING(""ID_PREGUNTA"")
-                where e.""ID_POSTULANTE"" = @idPostulante and e.""ID_COMPETENCIA"" = @idCompetencia ORDER BY e.""ORDEN_PREGUNTA""", connection))
+                using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
                 {
-                    cmd.Parameters.AddWithValue("@idPostulante", idPostulante);
-                    cmd.Parameters.AddWithValue("@idCompetencia", idCompetencia);
-
-                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    while (await reader.ReadAsync())
                     {
-                        while (reader.Read())
+                        lista.Add(new ResultadoPreguntaDTO
                         {
-                            lista.Add(new ResultadoPreguntaDTO
-                            {
-                                idPregunta = (int)reader["ID_PREGUNTA"],
-                                ordenPregunta = (int)reader["ORDEN_PREGUNTA"],
-                                estado = (int)reader["ESTADO"],
-                            });
-                        }
+                            idPregunta = (int)reader["ID_PREGUNTA"],
+                            ordenPregunta = (int)reader["ORDEN_PREGUNTA"],
+                            estado = (int)reader["ESTADO"],
+                        });
                     }
-
                 }
+
             }
 
 

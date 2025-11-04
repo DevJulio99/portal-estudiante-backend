@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using MyPortalStudent.Domain.DTOs;
 using MyPortalStudent.Domain.DTOs.Notas;
 using MyPortalStudent.Domain.IServices;
+using MyPortalStudent.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -15,15 +16,28 @@ namespace MyPortalStudent.Services
     public class NotasService : INotasService
     {
         private readonly IConfiguration _configuration;
+        private readonly ITenantService? _tenantService;
 
-        public NotasService(IConfiguration configuration)
+        public NotasService(IConfiguration configuration, ITenantService? tenantService = null)
         {
             _configuration = configuration;
+            _tenantService = tenantService;
+        }
+
+        /// <summary>
+        /// Crea una conexión y establece el tenant automáticamente
+        /// </summary>
+        private async Task<NpgsqlConnection> GetConnectionAsync()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connection = new NpgsqlConnection(connectionString);
+            await connection.SetTenantIfAvailableAsync(_tenantService);
+            return connection;
         }
 
         public async Task<List<PeriodoSedeDTO>> GetPeriodoPorSede(PeriodoRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT DISTINCT 
                                     p.id_periodo,
                                     p.descripcion_periodo
@@ -45,7 +59,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<GradoSedeDTO>> GetGradoPorSede(GradoRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT DISTINCT 
                                     g.""ID_GRADO"",
                                     g.""DESCRIPCION_GRADO"",
@@ -63,7 +77,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<SubperiodoDTO>> GetSubperiodosPorPeriodo(SubperiodoRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT 
                                     sp.id_subperiodo,
                                     sp.descripcion_subperiodo
@@ -76,7 +90,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<SeccionGradoDTO>> GetSeccionesPorGrado(SeccionesRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT DISTINCT
     se.id_seccion,
     se.descripcion AS descripcion_seccion
@@ -107,7 +121,7 @@ ORDER BY se.descripcion;
 
         public async Task<List<CursoGradoDTO>> GetCursosPorGrado(CursosPorGradoSedeRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT DISTINCT
                                     c.id_curso,
                                     c.descripcion_curso
@@ -128,7 +142,7 @@ ORDER BY se.descripcion;
 
         public async Task<List<AlumnoFiltroDTO>> GetAlumnosPorFiltro(AlumnosPorFiltroRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT DISTINCT
                                     a.id_alumno,
                                     a.codigo_alumno,
@@ -156,7 +170,7 @@ ORDER BY se.descripcion;
 
         public async Task<List<NotasAlumnoDTO>> GetNotasAlumno(NotasAlumnoRequestDTO request)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"SELECT 
                                     n.id_nota,
                                     n.nota,
@@ -176,10 +190,9 @@ ORDER BY se.descripcion;
 
         public async Task<BaseResponseDTO> RegistrarNotasAlumno(RegistrarNotaDto request)
         {
-
             try
             {
-                await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+                await using var connection = await GetConnectionAsync();
 
                 var parameters = new
                 {
@@ -219,7 +232,7 @@ ORDER BY se.descripcion;
         {
             try
             {
-                await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+                await using var connection = await GetConnectionAsync();
 
                 var parameters = new
                 {

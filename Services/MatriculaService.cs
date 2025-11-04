@@ -1,6 +1,7 @@
 using Dapper;
 using MyPortalStudent.Domain.DTOs;
 using MyPortalStudent.Domain.IServices;
+using MyPortalStudent.Utils;
 using Npgsql;
 using System.Data;
 using NpgsqlTypes; // Añadir esta importación
@@ -11,15 +12,28 @@ namespace MyPortalStudent.Services
     public class MatriculaService : IMatriculaService
     {
         private readonly IConfiguration _configuration;
+        private readonly ITenantService? _tenantService;
 
-        public MatriculaService(IConfiguration configuration)
+        public MatriculaService(IConfiguration configuration, ITenantService? tenantService = null)
         {
             _configuration = configuration;
+            _tenantService = tenantService;
+        }
+
+        /// <summary>
+        /// Crea una conexión y establece el tenant automáticamente
+        /// </summary>
+        private async Task<NpgsqlConnection> GetConnectionAsync()
+        {
+            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
+            var connection = new NpgsqlConnection(connectionString);
+            await connection.SetTenantIfAvailableAsync(_tenantService);
+            return connection;
         }
 
         public async Task<MatriculaResponseDTO> RealizarMatricula(MatriculaRegistrarDTO matriculaDto)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
 
             var parameters = new
             {
@@ -87,7 +101,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<MatriculaListarDTO>> ListarMatriculasPorPeriodo(int idPeriodo, string? codigoSede = null)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
 
             var parameters = new DynamicParameters();
             parameters.Add("@p_id_periodo", idPeriodo, DbType.Int32);
@@ -103,8 +117,7 @@ namespace MyPortalStudent.Services
 
         public async Task<MatriculaDTO?> ObtenerMatriculaPorId(int idMatricula)
         {
-            string connectionString = _configuration["ConnectionStrings:DefaultConnection"]!;
-            await using var connection = new NpgsqlConnection(connectionString);
+            await using var connection = await GetConnectionAsync();
 
             const string query = @"
                 SELECT m.id_matricula, 
@@ -140,7 +153,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<MatriculaDTO>> ObtenerMatriculasPorAlumno(int idAlumno)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string query = @"
                 SELECT m.id_matricula, m.id_alumno, m.fecha_inicio, m.fecha_fin, m.tipo_matricula, 
                        m.estado_matricula, m.id_seccion, m.observaciones, m.veces, m.id_periodo, 
@@ -163,7 +176,7 @@ namespace MyPortalStudent.Services
 
         public async Task<bool> VerificarMatriculaAlumno(int idAlumno, int idPeriodo)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             return await connection.ExecuteScalarAsync<bool>(
                 "verificar_matricula_alumno",
                 new { p_id_alumno = idAlumno, p_id_periodo = idPeriodo },
@@ -173,7 +186,7 @@ namespace MyPortalStudent.Services
 
         public async Task<bool> ActualizarEstadoMatricula(int idMatricula, string nuevoEstado)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string query = @"
                 UPDATE matricula 
                 SET estado_matricula = @NuevoEstado
@@ -185,7 +198,7 @@ namespace MyPortalStudent.Services
 
         public async Task<bool> DesactivarMatricula(int idMatricula)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string query = @"
                 UPDATE matricula 
                 SET activo = false, estado_matricula = 'Inactiva'
@@ -197,7 +210,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<MatriculaDTO>> ObtenerMatriculasActivasPorSede(string codigoSede)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string query = @"
                 SELECT m.id_matricula, m.id_alumno, m.fecha_inicio, m.fecha_fin, m.tipo_matricula, 
                        m.estado_matricula, m.id_seccion, m.observaciones, m.veces, m.id_periodo, 
@@ -220,7 +233,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<PeriodoAcademicoDTO>> ListarPeriodosDisponiblesParaMatricula(string codigoSede)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
 
             const string query = @"
                 SELECT p.*
@@ -248,7 +261,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<CursoSeccionDTO>> GetCursosPorGrado(int idGrado, string tipoInstitucion)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"
                 SELECT 
                     c.id_curso AS IdCurso,
@@ -300,7 +313,7 @@ namespace MyPortalStudent.Services
 
         public async Task<List<ReporteNotaDTO>> GetReporteNotas(int idAlumno)
         {
-            await using var connection = new NpgsqlConnection(_configuration["ConnectionStrings:DefaultConnection"]!);
+            await using var connection = await GetConnectionAsync();
             const string sql = @"
                 WITH notas_filtradas AS (
                     SELECT 

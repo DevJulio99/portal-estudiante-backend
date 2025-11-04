@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using MyPortalStudent.Domain;
 
-namespace JwtLoginService
+namespace MyPortalStudent.Domain.Ifunciones
 {
     public interface IAuthService
     {
