@@ -665,6 +665,7 @@ namespace MyPortalStudent.Funciones
                     IdPago = (int)reader["idpago"],
                     DocumentoPago = reader["documentopago"].ToString() ?? "",
                     FechaVencimiento = (DateTime)reader["fechav"],
+                    Ciclo = reader["ciclopago"].ToString() ?? "",
                     Saldo = (decimal)reader["saldopago"],
                     Mora = (decimal)reader["morapago"],
                     TotalAPagar = (decimal)reader["totalpago"],
