@@ -2,21 +2,21 @@ namespace MyPortalStudent.Domain.DTOs
 {
     public class MatriculaDTO
     {
-        public required int IdMatricula { get; set; }
-        public required int IdAlumno { get; set; }
-        public required string FechaInicio { get; set; }
-        public required string FechaFin { get; set; }
-        public required string TipoMatricula { get; set; }
-        public required string EstadoMatricula { get; set; }
+        public int IdMatricula { get; set; }
+        public int IdAlumno { get; set; }
+        public string FechaInicio { get; set; }
+        public string FechaFin { get; set; }
+        public string TipoMatricula { get; set; }
+        public string EstadoMatricula { get; set; }
         public int? IdSeccion { get; set; }
         public string? Observaciones { get; set; }
         public int? Veces { get; set; }
-        public required int IdPeriodo { get; set; }
-        public required int IdGrado { get; set; }
-        public required string CodigoSede { get; set; }
-        public required string FechaMatricula { get; set; }
-        public required string UsuarioRegistro { get; set; }
-        public required bool Activo { get; set; }
+        public int IdPeriodo { get; set; }
+        public int IdGrado { get; set; }
+        public string CodigoSede { get; set; }
+        public string FechaMatricula { get; set; }
+        public string UsuarioRegistro { get; set; }
+        public bool Activo { get; set; }
         
         // Información adicional del alumno
         public string? NombreAlumno { get; set; }

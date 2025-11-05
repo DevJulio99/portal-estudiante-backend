@@ -40,7 +40,6 @@ namespace MyPortalStudent.Services
                 p_id_alumno = matriculaDto.IdAlumno,
                 p_id_periodo = matriculaDto.IdPeriodo,
                 p_id_grado = matriculaDto.IdGrado,
-                p_codigo_sede = matriculaDto.CodigoSede,
                 p_tipo_matricula = matriculaDto.TipoMatricula,
                 p_estado_matricula = matriculaDto.EstadoMatricula,
                 p_observaciones = matriculaDto.Observaciones,
@@ -52,7 +51,7 @@ namespace MyPortalStudent.Services
             // Usamos QuerySingleOrDefaultAsync<string> para leer ese valor.
             try
             {
-                const string sql = "SELECT realizar_matricula_colegio(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_codigo_sede, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro, @p_tipo_institucion)";
+                const string sql = "SELECT realizar_matricula_colegio(@p_id_alumno, @p_id_periodo, @p_id_grado, @p_tipo_matricula, @p_estado_matricula, @p_observaciones, @p_usuario_registro, @p_tipo_institucion)";
 
                 var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(
                     sql,
@@ -187,13 +186,15 @@ namespace MyPortalStudent.Services
         public async Task<bool> ActualizarEstadoMatricula(int idMatricula, string nuevoEstado)
         {
             await using var connection = await GetConnectionAsync();
-            const string query = @"
-                UPDATE matricula 
-                SET estado_matricula = @NuevoEstado
-                WHERE id_matricula = @IdMatricula AND activo = true";
+            const string sql = "SELECT public.actualizar_estado_matricula(@p_id_matricula, @p_nuevo_estado)";
+            
+            var parameters = new
+            {
+                p_id_matricula = idMatricula,
+                p_nuevo_estado = nuevoEstado
+            };
 
-            var rowsAffected = await connection.ExecuteAsync(query, new { NuevoEstado = nuevoEstado, IdMatricula = idMatricula });
-            return rowsAffected > 0;
+            return await connection.ExecuteScalarAsync<bool>(sql, parameters);
         }
 
         public async Task<bool> DesactivarMatricula(int idMatricula)
@@ -208,26 +209,12 @@ namespace MyPortalStudent.Services
             return rowsAffected > 0;
         }
 
-        public async Task<List<MatriculaDTO>> ObtenerMatriculasActivasPorSede(string codigoSede)
+        public async Task<List<MatriculaDTO>> ObtenerMatriculasActivasPorSede()
         {
             await using var connection = await GetConnectionAsync();
-            const string query = @"
-                SELECT m.id_matricula, m.id_alumno, m.fecha_inicio, m.fecha_fin, m.tipo_matricula, 
-                       m.estado_matricula, m.id_seccion, m.observaciones, m.veces, m.id_periodo, 
-                       m.id_grado, m.codigo_sede, m.fecha_matricula, m.usuario_registro, m.activo,
-                       a.nombre as nombre_alumno, a.apellido_paterno, a.apellido_materno, a.dni as dni_alumno,
-                       g.""DESCRIPCION_GRADO"" as descripcion_grado, g.""NIVEL_EDUCATIVO"" as nivel_educativo,
-                       p.descripcion_periodo, p.codigo_periodo,
-                       s.descripcion_sede
-                FROM matricula m
-                INNER JOIN alumno a ON m.id_alumno = a.id_alumno
-                LEFT JOIN grado g ON m.id_grado = g.""ID_GRADO""
-                LEFT JOIN periodoacademico p ON m.id_periodo = p.id_periodo
-                LEFT JOIN sede s ON m.codigo_sede = s.codigo_sede
-                WHERE m.codigo_sede = @CodigoSede AND m.activo = true
-                ORDER BY m.fecha_matricula DESC";
+            const string query = "SELECT * from listar_matriculas()";
 
-            var matriculas = await connection.QueryAsync<MatriculaDTO>(query, new { CodigoSede = codigoSede });
+            var matriculas = await connection.QueryAsync<MatriculaDTO>(query);
             return matriculas.AsList();
         }
 

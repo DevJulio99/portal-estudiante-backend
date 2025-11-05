@@ -212,12 +212,11 @@ namespace MyPortalStudent.Controllers
         /// <summary>
         /// Obtiene todas las matrículas activas de una sede
         /// </summary>
-        /// <param name="codigoSede">Código de la sede</param>
         /// <returns>Lista de matrículas activas de la sede</returns>
-        [HttpGet("obtener-por-sede/{codigoSede}")]
-        public async Task<ActionResult> ObtenerMatriculasActivasPorSede(string codigoSede)
+        [HttpGet("obtener-por-sede")]
+        public async Task<ActionResult> ObtenerMatriculasActivasPorSede()
         {
-            var matriculas = await _matriculaService.ObtenerMatriculasActivasPorSede(codigoSede);
+            var matriculas = await _matriculaService.ObtenerMatriculasActivasPorSede();
             
             if (matriculas.Count == 0)
             {
