@@ -8,7 +8,6 @@ public class AlumnoRegistrarDTO
     public required string apellidoMaterno { get; set; }
     public required string telefono { get; set; }
     public required string numeroDocumento { get; set; }
-    public string? codigoSede { get; set; }
     public required string fechaNacimiento { get; set; }
     public required string direccion { get; set; }
     public required string fotoPerfil { get; set; }

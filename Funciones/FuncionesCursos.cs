@@ -1057,42 +1057,48 @@ namespace MyPortalStudent.Funciones
 
         public async Task<Boolean> registrarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-             if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+            if (string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento))
+            {
                 throw new ArgumentException("El numero de documento es obligatorio");
             }
-            
+
             await using var connection = await GetConnectionAsync();
-            using (var command = new NpgsqlCommand(@"CALL public.insertar_usuario_alumno(@correo,
-             @nombre, @ap, @am, @telefono, @dni, @codigosede, @fechanacimiento, @direccion,
-             @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
+            var parameters = new DynamicParameters();
+            parameters.Add("correo_usuario", alumnoRegistrarDto.correo);
+            parameters.Add("nombre_usuario", alumnoRegistrarDto.nombreUsuario);
+            parameters.Add("apellido_p_usuario", alumnoRegistrarDto.apellidoPaterno);
+            parameters.Add("apellido_m_usuario", alumnoRegistrarDto.apellidoMaterno);
+            parameters.Add("telefono_usuario", alumnoRegistrarDto.telefono);
+            parameters.Add("dni_usuario", alumnoRegistrarDto.numeroDocumento);
+            parameters.Add("fn_usuario", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+            parameters.Add("direccion_usuario", alumnoRegistrarDto.direccion);
+            parameters.Add("foto_perfil_usuario", alumnoRegistrarDto.fotoPerfil);
+            parameters.Add("genero_usuario", alumnoRegistrarDto.genero);
+            parameters.Add("t_a_usuario", alumnoRegistrarDto.tipoAlumno);
+            parameters.Add("observacion_alumno", alumnoRegistrarDto.observaciones);
+            parameters.Add("apoderado_alumno", alumnoRegistrarDto.apoderado);
+            parameters.Add("t_i_alumno", alumnoRegistrarDto.tipoInstitucion);
+            parameters.Add("grado_alumno", alumnoRegistrarDto.idGrado);
+            parameters.Add("habilitado_prueba_alumno", alumnoRegistrarDto.habilitadoPrueba);
+            parameters.Add("resultado_json", dbType: System.Data.DbType.String, direction: System.Data.ParameterDirection.Output, size: 2048);
+
+            try
             {
+                await connection.ExecuteAsync("insertar_usuario_alumno", parameters, commandType: System.Data.CommandType.StoredProcedure);
 
-                command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
-                command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
-                command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
-                command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
-                command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
-                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
-                    command.Parameters.AddWithValue("codigosede", alumnoRegistrarDto.codigoSede);
-                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
-                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
-                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
-                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
-                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
-                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
-                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
-                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
-                    command.Parameters.AddWithValue("gradoalumno", (object)alumnoRegistrarDto.idGrado ?? DBNull.Value);
-                    command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
+                var jsonResult = parameters.Get<string>("resultado_json");
 
-                    try
-                    {
-                        await command.ExecuteNonQueryAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                       throw new ArgumentException("error al registrar");
-                    }
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var dbResult = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+                if (dbResult == null || !dbResult.Success)
+                {
+                    throw new InvalidOperationException(dbResult?.Message ?? "Error al registrar el alumno.");
+                }
+            }
+            catch (PostgresException ex)
+            {
+                throw new InvalidOperationException($"Error de base de datos al registrar el alumno: {ex.MessageText}", ex);
             }
 
             return true;
@@ -1100,42 +1106,41 @@ namespace MyPortalStudent.Funciones
 
         public async Task<Boolean> actualizarUsuarioAlumno(AlumnoRegistrarDTO alumnoRegistrarDto)
         {
-            if(string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento)){
+            if (string.IsNullOrEmpty(alumnoRegistrarDto.numeroDocumento))
+            {
                 throw new ArgumentException("El numero de documento es obligatorio");
             }
-            
+
             await using var connection = await GetConnectionAsync();
-                using (var command = new NpgsqlCommand(@"CALL public.actualizar_usuario_alumno(@correo, @contraseña,
-                 @nombre, @ap, @am, @telefono, @dni, @fechanacimiento, @direccion,
-                 @foto, @genero, @talumno, @observacion, @apoderado, @tinstitucion, @gradoalumno, @habilitadopruebaalumno)", connection))
-                {
+            var parameters = new DynamicParameters();
+            parameters.Add("correo_usuario", alumnoRegistrarDto.correo);
+            parameters.Add("contraseña_usuario", alumnoRegistrarDto.contraseña);
+            parameters.Add("nombre_usuario", alumnoRegistrarDto.nombreUsuario);
+            parameters.Add("apellido_p_usuario", alumnoRegistrarDto.apellidoPaterno);
+            parameters.Add("apellido_m_usuario", alumnoRegistrarDto.apellidoMaterno);
+            parameters.Add("telefono_usuario", alumnoRegistrarDto.telefono);
+            parameters.Add("dni_usuario_alumno", alumnoRegistrarDto.numeroDocumento);
+            parameters.Add("fn_usuario", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
+            parameters.Add("direccion_usuario", alumnoRegistrarDto.direccion);
+            parameters.Add("foto_perfil_usuario", alumnoRegistrarDto.fotoPerfil);
+            parameters.Add("genero_usuario", alumnoRegistrarDto.genero);
+            parameters.Add("t_a_usuario", alumnoRegistrarDto.tipoAlumno);
+            parameters.Add("observacion_alumno", alumnoRegistrarDto.observaciones);
+            parameters.Add("apoderado_alumno", alumnoRegistrarDto.apoderado);
+            parameters.Add("t_i_alumno", alumnoRegistrarDto.tipoInstitucion);
+            parameters.Add("grado_alumno", alumnoRegistrarDto.idGrado);
+            parameters.Add("habilitado_prueba_alumno", alumnoRegistrarDto.habilitadoPrueba);
+            parameters.Add("resultado_json", dbType: System.Data.DbType.String, direction: System.Data.ParameterDirection.Output, size: 2048);
 
-                    command.Parameters.AddWithValue("correo", alumnoRegistrarDto.correo);
-                    command.Parameters.AddWithValue("contraseña", alumnoRegistrarDto.contraseña ?? "");
-                    command.Parameters.AddWithValue("nombre", alumnoRegistrarDto.nombreUsuario);
-                    command.Parameters.AddWithValue("ap", alumnoRegistrarDto.apellidoPaterno);
-                    command.Parameters.AddWithValue("am", alumnoRegistrarDto.apellidoMaterno);
-                    command.Parameters.AddWithValue("telefono", alumnoRegistrarDto.telefono);
-                    command.Parameters.AddWithValue("dni", alumnoRegistrarDto.numeroDocumento);
-                    command.Parameters.AddWithValue("fechanacimiento", DateTime.Parse(alumnoRegistrarDto.fechaNacimiento));
-                    command.Parameters.AddWithValue("direccion", alumnoRegistrarDto.direccion);
-                    command.Parameters.AddWithValue("foto", alumnoRegistrarDto.fotoPerfil);
-                    command.Parameters.AddWithValue("genero", alumnoRegistrarDto.genero);
-                    command.Parameters.AddWithValue("talumno", alumnoRegistrarDto.tipoAlumno);
-                    command.Parameters.AddWithValue("observacion", alumnoRegistrarDto.observaciones);
-                    command.Parameters.AddWithValue("apoderado", alumnoRegistrarDto.apoderado);
-                    command.Parameters.AddWithValue("tinstitucion", alumnoRegistrarDto.tipoInstitucion);
-                    command.Parameters.AddWithValue("gradoalumno", (object)alumnoRegistrarDto.idGrado ?? DBNull.Value);
-                    command.Parameters.AddWithValue("habilitadopruebaalumno", alumnoRegistrarDto.habilitadoPrueba);
+            await connection.ExecuteAsync("actualizar_usuario_alumno", parameters, commandType: System.Data.CommandType.StoredProcedure);
 
-                    try
-                    {
-                        await command.ExecuteNonQueryAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                       throw new Exception("error al actualizar");
-                    }
+            var jsonResult = parameters.Get<string>("resultado_json");
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var dbResult = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+            if (dbResult == null || !dbResult.Success)
+            {
+                throw new InvalidOperationException(dbResult?.Message ?? "Error al actualizar el alumno.");
             }
 
             return true;
