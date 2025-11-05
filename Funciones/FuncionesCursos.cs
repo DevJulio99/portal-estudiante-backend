@@ -5,6 +5,8 @@ using MyPortalStudent.Domain.IServices;
 using MyPortalStudent.Utils;
 using Npgsql;
 using Dapper;
+using MyPortalStudent.Domain.DTOs;
+using System.Text.Json;
 
 namespace MyPortalStudent.Funciones
 {
@@ -1163,59 +1165,41 @@ namespace MyPortalStudent.Funciones
         
         public async Task<Boolean> AddDocument(DocumentoAddDTO documentoAddDto)
         {
-            await using var connection = await GetConnectionAsync();
-
-            // Obtener el tenant actual
-            var codigoSede = _tenantService?.GetCurrentTenant();
-            if (string.IsNullOrWhiteSpace(codigoSede))
-            {
-                throw new InvalidOperationException("No se pudo obtener el código de sede del contexto actual. Asegúrese de que el usuario esté autenticado.");
-            }
-
-            const string query = @"INSERT INTO documentos
-                            (""ID_CATEGORIA_DOCUMENTO"", ""STATUS"", ""TITULO"", ""DESCRIPCION"", ""ENLACE"", ""SECUENCIA"",
-                            ""DATE_CREATED"", ""TIPO_DOCUMENTO"", ""MAS_BUSCADOS"", ""SECUENCIA_MAS_BUSCADA"", ""DOCUMENTO_VER"",
-                            ""INTERNO"", ""FECHA_ACTUALIZACION"", ""FECHA_INICIO"", ""FECHA_FIN"", ""DOCUMENTO_DESCARGA"",
-                            ""NOMBRE_DOCUMENTO"", ""TYPE"", ""codigo_sede"")
-                            VALUES
-                            (@idCategoriaDocumento, @status, @titulo, @descripcion, @enlace, @secuencia, @dateCreated,
-                            @tipoDocumento, @masBuscados, @secuenciaMasBuscada, @documentoVer, @interno, @fechaActualizacion,
-                            @fechaInicio, @fechaFin, @documentoDescarga, @nombreDocumento, @type, @codigoSede)";
-
-            using var cmd = new NpgsqlCommand(query, connection);
-            
-            cmd.Parameters.AddWithValue("@idCategoriaDocumento", documentoAddDto.IdCategoriaDocumento);
-            cmd.Parameters.AddWithValue("@status", documentoAddDto.Status ?? "published");
-            cmd.Parameters.AddWithValue("@titulo", documentoAddDto.Titulo ?? "Nuevo Documento");
-            cmd.Parameters.AddWithValue("@descripcion", (object?)documentoAddDto.Descripcion ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@enlace", (object?)documentoAddDto.Enlace ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@secuencia", documentoAddDto.Secuencia ?? 0);
-            cmd.Parameters.AddWithValue("@dateCreated", documentoAddDto.DateCreated ?? DateTime.Now);
-            cmd.Parameters.AddWithValue("@tipoDocumento", documentoAddDto.TipoDocumento ?? "pdf");
-            cmd.Parameters.AddWithValue("@masBuscados", documentoAddDto.MasBuscados);
-            cmd.Parameters.AddWithValue("@secuenciaMasBuscada", documentoAddDto.SecuenciaMasBuscada ?? 0);
-            cmd.Parameters.AddWithValue("@documentoVer", documentoAddDto.Documento ?? "");
-            cmd.Parameters.AddWithValue("@interno", documentoAddDto.Interno);
-            cmd.Parameters.AddWithValue("@fechaActualizacion", documentoAddDto.FechaActualizacion ?? DateTime.Now);
-            cmd.Parameters.AddWithValue("@fechaInicio", documentoAddDto.FechaInicio ?? DateTime.Now);
-            cmd.Parameters.AddWithValue("@fechaFin", documentoAddDto.FechaFin ?? DateTime.Now);
-            cmd.Parameters.AddWithValue("@documentoDescarga", documentoAddDto.DocumentoDescarga ?? "");
-            cmd.Parameters.AddWithValue("@nombreDocumento", documentoAddDto.Titulo ?? "Nuevo Documento");
-            cmd.Parameters.AddWithValue("@type", documentoAddDto.Type ?? "application/pdf");
-            cmd.Parameters.AddWithValue("@codigoSede", codigoSede);
-
             try
             {
-                await cmd.ExecuteNonQueryAsync();
-                return true;
+                await using var connection = await GetConnectionAsync();
+                const string sql = "SELECT insertar_documento(@p_id_categoria_documento, @p_titulo, @p_descripcion, @p_documento, @p_interno, @p_documento_descarga)";
+
+                var parameters = new
+                {
+                    p_id_categoria_documento = documentoAddDto.IdCategoriaDocumento,
+                    p_titulo = documentoAddDto.Titulo,
+                    p_descripcion = documentoAddDto.Descripcion,
+                    p_documento = documentoAddDto.Documento,
+                    p_interno = documentoAddDto.Interno,
+                    p_documento_descarga = documentoAddDto.DocumentoDescarga
+                };
+
+                var jsonResult = await connection.ExecuteScalarAsync<string>(sql, parameters);
+
+                if (string.IsNullOrEmpty(jsonResult))
+                {
+                    throw new InvalidOperationException("La función de base de datos para insertar el documento no devolvió un resultado.");
+                }
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var dbResult = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+                if (dbResult == null || !dbResult.Success)
+                {
+                    throw new InvalidOperationException(dbResult?.Message ?? "Error al procesar la respuesta de la base de datos.");
+                }
+
+                return dbResult.Success;
             }
             catch (PostgresException ex)
             {
                 throw new InvalidOperationException($"Error de base de datos al agregar el documento: {ex.MessageText}", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Error al agregar el documento. Verifique los datos proporcionados.", ex);
             }
         }
 
