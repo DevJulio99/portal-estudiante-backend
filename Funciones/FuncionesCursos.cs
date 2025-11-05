@@ -973,9 +973,8 @@ namespace MyPortalStudent.Funciones
             }
             await using var connection = await GetConnectionAsync();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
-            cmd.Parameters.AddWithValue("codigoSede", listaAlumno.codigoSede);
-            cmd.Parameters.AddWithValue("Pagina", pagina);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_alumnos_sede_paginado(@pagina, @itemsPorPagina)", connection);
+            cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", listaAlumno.itemsPorPagina);
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
 
@@ -1018,8 +1017,7 @@ namespace MyPortalStudent.Funciones
             }
 
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_alumnos_paginado(@codigoSede, @filtro, @pagina, @itemsPorPagina)", connection);
-            cmd.Parameters.AddWithValue("codigoSede", filtroAlumno.codigoSede);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_alumnos_paginado(@filtro, @pagina, @itemsPorPagina)", connection);
             cmd.Parameters.AddWithValue("filtro", filtroAlumno.filtro);
             cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", filtroAlumno.itemsPorPagina);

@@ -164,20 +164,12 @@ namespace MyPortalStudent.Controllers
             });
         }
 
-        [HttpPost("registrar")]
-        public async Task<ActionResult> RegistrarNotasAlumno([FromBody] RegistrarNotaDto request)
+        [HttpPost("gestionar")]
+        public async Task<ActionResult> GestionarNotasAlumno([FromBody] GestionarNotaDto request)
         {
-            var resultado = await _notasService.RegistrarNotasAlumno(request);
+            var resultado = await _notasService.GestionarNotasAlumno(request);
 
-            return Ok(new ApiResponse<object> { Success = true, Message = resultado.Message, Data = null });
-        }
-
-        [HttpPut("actualizar")]
-        public async Task<ActionResult> ActualizarNotasAlumno([FromBody] RegistrarNotaDto request)
-        {
-            var resultado = await _notasService.ActualizarNotasAlumno(request);
-
-            return Ok(new ApiResponse<object> { Success = true, Message = resultado.Message, Data = null });
+            return Ok(new ApiResponse<object> { Success = resultado.Success, Message = resultado.Message, Data = null });
         }
     }
 }
