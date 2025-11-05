@@ -75,7 +75,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var listaExamen = await _service.listarExamen(idPostulante, idCompetencia);
-            apiResult.Message = string.Format(listaExamen.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
+            apiResult.Message = string.Format(listaExamen.Count.Equals(0) ? "No se encontró datos" : "Se encontró datos", _controllerName);
             apiResult.Success = listaExamen.Count > 0;
             apiResult.Data = listaExamen;
             if (listaExamen.Count == 0)
@@ -90,7 +90,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var listaCompetencia = await _service.listarCompetencias(idPostulante);
-            apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
+            apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontró datos" : "Se encontró datos", _controllerName);
             apiResult.Data = listaCompetencia;
             apiResult.Success = listaCompetencia.Count > 0;
             if (listaCompetencia.Count == 0)
@@ -106,7 +106,7 @@ namespace MyPortalStudent.Controllers
             var apiResult = new ApiResult<Object>();
             var listaCompetencia = await _service.listarCompetenciasFinalizadas(idPostulante);
             apiResult.Success = listaCompetencia.Count > 0;
-            apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontro datos" : "Se encontro datos", _controllerName);
+            apiResult.Message = string.Format(listaCompetencia.Count.Equals(0) ? "No se encontró datos" : "Se encontró datos", _controllerName);
             apiResult.Data = listaCompetencia;
             if (listaCompetencia.Count == 0)
             {
@@ -121,7 +121,7 @@ namespace MyPortalStudent.Controllers
 
             var apiResult = new ApiResult<Object>();
             await _service.ActualizarRespuesta(request);
-            apiResult.Message = string.Format("Se actualizo la respuesta correctamente", _controllerName);
+            apiResult.Message = string.Format("Se actualizó la respuesta correctamente", _controllerName);
             return this.Ok(apiResult);
         }
 
@@ -130,7 +130,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var completed = await _service.CompetenciaCompleta(idPostulante, idCompetencia);
-            apiResult.Message = string.Format((completed ? "Completo" : "No completo") + " la competencia", _controllerName);
+            apiResult.Message = string.Format((completed ? "Completó" : "No completó") + " la competencia", _controllerName);
             apiResult.Success = completed;
             return this.Ok(apiResult);
         }
@@ -140,7 +140,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var lista = await _service.listarPostulante(dniPostulante);
-            apiResult.Message = lista.Count > 0 ? "Se encontro postulante" : "No se pudo encontrar postulante";
+            apiResult.Message = lista.Count > 0 ? "Se encontró postulante" : "No se pudo encontrar postulante";
             apiResult.Success = lista.Count > 0;
             apiResult.Data = lista;
             if (lista.Count == 0)
@@ -155,7 +155,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var success = await _service.registrarPostulante(postulanteDto);
-            apiResult.Message = success ? "Se registro postulante" : "No se pudo registrar postulante";
+            apiResult.Message = success ? "Se registró postulante" : "No se pudo registrar postulante";
             apiResult.Success = success;
             return this.Ok(apiResult);
         }
@@ -165,7 +165,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var success = await _service.registrarActividadPostulante(ultimaActividadDto);
-            apiResult.Message = success ? "Se registro actividad" : "No se pudo registrar actividad";
+            apiResult.Message = success ? "Se registró actividad" : "No se pudo registrar actividad";
             apiResult.Success = success;
             return this.Ok(apiResult);
         }
@@ -175,7 +175,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var ultimaRespuesta = await _service.getUltimaRespuestaExamen(idPostulante, idCompetencia);
-            apiResult.Message = ultimaRespuesta.Count > 0 ? "Se encontro actividad" : "No se pudo encontrar actividad";
+            apiResult.Message = ultimaRespuesta.Count > 0 ? "Se encontró actividad" : "No se pudo encontrar actividad";
             apiResult.Success = ultimaRespuesta.Count > 0;
             apiResult.Data = ultimaRespuesta;
             return this.Ok(apiResult);
@@ -186,7 +186,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var lista = await _service.listarEstadoCompetencia(idPostulante, idCompetencia);
-            apiResult.Message = lista.Count > 0 ? "Se encontro estados" : "No se pudo encontrar estados";
+            apiResult.Message = lista.Count > 0 ? "Se encontró estados" : "No se pudo encontrar estados";
             apiResult.Success = lista.Count > 0;
             apiResult.Data = lista;
             if (lista.Count == 0)
@@ -201,7 +201,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var success = await _service.registrarEstadoCompetencia(estadoCompetenciaDto);
-            apiResult.Message = success ? "Se registro estado" : "No se pudo registrar estado";
+            apiResult.Message = success ? "Se registró estado" : "No se pudo registrar estado";
             apiResult.Success = success;
             return this.Ok(apiResult);
         }
@@ -211,7 +211,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var success = await _service.actualizarEstadoCompetencia(estadoCompetenciaDto);
-            apiResult.Message = success ? "Se actualizo estado" : "No se pudo actualizar estado";
+            apiResult.Message = success ? "Se actualizó estado" : "No se pudo actualizar estado";
             apiResult.Success = success;
             return this.Ok(apiResult);
         }
@@ -221,7 +221,7 @@ namespace MyPortalStudent.Controllers
         {
             var apiResult = new ApiResult<Object>();
             var success = await _service.alumnoHabilitado(dniAlumno);
-            apiResult.Message = success ? "El alumno esta habilitado" : "El alumno no esta habilitado";
+            apiResult.Message = success ? "El alumno está habilitado" : "El alumno no está habilitado";
             apiResult.Success = success;
             return this.Ok(apiResult);
         }

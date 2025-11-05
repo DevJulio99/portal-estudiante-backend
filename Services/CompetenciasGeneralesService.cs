@@ -325,12 +325,20 @@ namespace MyPortalStudent.Services
             var listaPostulante = await listarPostulante(postulanteDto.dni);
 
             if(listaPostulante.Count > 0){
-                throw new Exception("El postulante ingresado ya esta registrado.");
+                throw new Exception("El postulante ingresado ya está registrado.");
             }
 
             await using var connection = await GetConnectionAsync();
 
-            string dml = @"insert into postulante (""DNI"", ""NOMBRE"", ""APELLIDO"", ""CORREO"", ""ESTADO"") values (:DNI, :NOM, :APE, :COR, :EST)";
+            using var cmdTenant = new NpgsqlCommand("SELECT current_setting('app.current_tenant', true)", connection);
+            var codigoSede = await cmdTenant.ExecuteScalarAsync() as string;
+
+            if (string.IsNullOrWhiteSpace(codigoSede))
+            {
+                throw new Exception("No se pudo obtener el código de sede del tenant actual.");
+            }
+
+            string dml = @"insert into postulante (""DNI"", ""NOMBRE"", ""APELLIDO"", ""CORREO"", ""ESTADO"", ""codigo_sede"") values (:DNI, :NOM, :APE, :COR, :EST, :SEDE)";
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
@@ -339,10 +347,12 @@ namespace MyPortalStudent.Services
                 cmd.Parameters.AddWithValue("APE", postulanteDto.apellido);
                 cmd.Parameters.AddWithValue("COR", postulanteDto.correo);
                 cmd.Parameters.AddWithValue("EST", postulanteDto.estado);
+                cmd.Parameters.AddWithValue("SEDE", codigoSede);
 
                 try
                 {
                     var result = await cmd.ExecuteNonQueryAsync();
+                    status = result > 0; // Si se insertó al menos 1 registro, status = true
                 }
                 catch (Exception ex)
                 {
@@ -551,13 +561,22 @@ namespace MyPortalStudent.Services
 
             await using var connection = await GetConnectionAsync();
 
-            string dml = @"insert into estado_competencia (""ID_COMPETENCIA"", ""ID_POSTULANTE"", ""ESTADO"", ""TIEMPO_INICIADO"") values (:IDC, :IDP, :EST, current_timestamp  at time zone 'America/Lima')";
+            using var cmdTenant = new NpgsqlCommand("SELECT current_setting('app.current_tenant', true)", connection);
+            var codigoSede = await cmdTenant.ExecuteScalarAsync() as string;
+
+            if (string.IsNullOrWhiteSpace(codigoSede))
+            {
+                throw new Exception("No se pudo obtener el código de sede del tenant actual.");
+            }
+
+            string dml = @"insert into estado_competencia (""ID_COMPETENCIA"", ""ID_POSTULANTE"", ""ESTADO"", ""TIEMPO_INICIADO"", ""codigo_sede"") values (:IDC, :IDP, :EST, current_timestamp  at time zone 'America/Lima', :SEDE)";
 
             using (NpgsqlCommand cmd = new NpgsqlCommand(dml, connection))
             {
                 cmd.Parameters.AddWithValue("IDP", estadoCompetenciaDto.idPostulante);
                 cmd.Parameters.AddWithValue("IDC", estadoCompetenciaDto.idCompetencia);
-                cmd.Parameters.AddWithValue("EST",  !string.IsNullOrEmpty(estadoCompetenciaDto.estado) ? estadoCompetenciaDto.estado.ToUpper() : null);
+                cmd.Parameters.AddWithValue("EST", string.IsNullOrEmpty(estadoCompetenciaDto.estado) ? (object)DBNull.Value : estadoCompetenciaDto.estado.ToUpper());
+                cmd.Parameters.AddWithValue("SEDE", codigoSede);
 
                 try
                 {
@@ -565,7 +584,7 @@ namespace MyPortalStudent.Services
                 }
                 catch (Exception ex)
                 {
-                   status = false;
+                    status = false;
                 }
             }
             return status;
