@@ -6,6 +6,5 @@ public class CursoActualizarDTO
     public required decimal Creditos { get; set; }
     public required string Modalidad { get; set; }
     public required string Nivel { get; set; }
-    public required string CodigoSede { get; set; }
 }
 }

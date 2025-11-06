@@ -1327,13 +1327,12 @@ WHERE a.dni = @NumDocUsuario;";
             
             await using var connection = await GetConnectionAsync();
                 using (var command = new NpgsqlCommand(@"CALL public.insertar_curso(@descripcion, @creditos,
-                @modalidad, @nivel, @codSede)", connection))
+                @modalidad, @nivel)", connection))
                 {
                     command.Parameters.AddWithValue("descripcion", cursoRegistrarDto.DescripcionCurso);
                     command.Parameters.AddWithValue("creditos", cursoRegistrarDto.Creditos);
                     command.Parameters.AddWithValue("modalidad", cursoRegistrarDto.Modalidad);
                     command.Parameters.AddWithValue("nivel", cursoRegistrarDto.Nivel);
-                    command.Parameters.AddWithValue("codSede", cursoRegistrarDto.CodigoSede);
 
                     try
                     {
@@ -1365,14 +1364,13 @@ WHERE a.dni = @NumDocUsuario;";
             
             await using var connection = await GetConnectionAsync();
                 using (var command = new NpgsqlCommand(@"CALL public.actualizar_curso(@id, @descripcion, @creditos,
-                @modalidad, @nivel, @codSede)", connection))
+                @modalidad, @nivel)", connection))
                 {
                     command.Parameters.AddWithValue("id", cursoActualizarDto.IdCurso);
                     command.Parameters.AddWithValue("descripcion", cursoActualizarDto.DescripcionCurso);
                     command.Parameters.AddWithValue("creditos", cursoActualizarDto.Creditos);
                     command.Parameters.AddWithValue("modalidad", cursoActualizarDto.Modalidad);
                     command.Parameters.AddWithValue("nivel", cursoActualizarDto.Nivel);
-                    command.Parameters.AddWithValue("codSede", cursoActualizarDto.CodigoSede);
 
                     try
                     {
