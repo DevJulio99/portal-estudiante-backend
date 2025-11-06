@@ -83,34 +83,51 @@ namespace MyPortalStudent.Funciones
 
             const string sql = @"
                 SELECT
-                    codigo_alumno AS CodAlumno,
-                    apellido_paterno AS ApePatImag,
-                    apellido_materno AS ApeMatImag,
-                    dni AS DocumenIdentida,
-                    tipo_alumno AS DesTipoAlumno,
-                    fecha_nacimiento AS FechaNacimiento,
-                    genero AS Sexo,
-                    telefono,
-                    direccion,
-                    nombre || ' ' || apellido_paterno || ' ' || apellido_materno AS FullName,
-                    correo AS CorreoPersonal,
-                    foto_perfil AS FotoUrlLow,
-                    p.codigo_periodo AS codPeriodoActual,
-                    COALESCE(s.codigo_subperiodo, '') AS codSubperiodoActual,
-					g.""DESCRIPCION_GRADO"" as desGrado,
-					g.""NIVEL_EDUCATIVO"" as desNivel,
-					sec.descripcion as desSeccion
-                FROM alumno a
-				inner join matricula m on a.id_alumno = m.id_alumno
-				inner join grado g on m.id_grado = g.""ID_GRADO""
-				inner join seccion sec on m.id_seccion = sec.id_seccion
-                LEFT JOIN 
-                PeriodoAcademico p ON CURRENT_DATE BETWEEN
-	            p.fecha_inicio AND p.fecha_fin AND p.tipo_periodo = 'Año'
-                LEFT JOIN 
-                subperiodos s ON p.id_periodo = s.id_periodo 
-                    AND CURRENT_DATE BETWEEN s.fecha_inicio AND s.fecha_fin
-                WHERE dni = @NumDocUsuario";
+    a.codigo_alumno AS CodAlumno,
+    a.apellido_paterno AS ApePatImag,
+    a.apellido_materno AS ApeMatImag,
+    a.dni AS DocumenIdentida,
+    a.tipo_alumno AS DesTipoAlumno,
+    a.fecha_nacimiento AS FechaNacimiento,
+    a.genero AS Sexo,
+    a.telefono,
+    a.direccion,
+    a.nombre || ' ' || a.apellido_paterno || ' ' || a.apellido_materno AS FullName,
+    a.correo AS CorreoPersonal,
+    a.foto_perfil AS FotoUrlLow,
+    pa.codigo_periodo AS codPeriodoActual,
+    COALESCE(sp.codigo_subperiodo, '') AS codSubperiodoActual,
+    g.""DESCRIPCION_GRADO"" AS desGrado,
+    g.""NIVEL_EDUCATIVO"" AS desNivel,
+    sec.descripcion AS desSeccion
+FROM alumno a
+INNER JOIN matricula m ON a.id_alumno = m.id_alumno
+INNER JOIN grado g ON m.id_grado = g.""ID_GRADO""
+INNER JOIN seccion sec ON m.id_seccion = sec.id_seccion
+INNER JOIN PeriodoAcademico pa ON pa.id_periodo = m.id_periodo
+LEFT JOIN LATERAL (
+    SELECT s.codigo_subperiodo, s.descripcion_subperiodo
+    FROM subperiodos s
+    WHERE s.id_periodo = pa.id_periodo
+      AND (
+          pa.anio < EXTRACT(YEAR FROM CURRENT_DATE)
+          OR
+          (pa.anio = EXTRACT(YEAR FROM CURRENT_DATE)
+           AND CURRENT_DATE BETWEEN s.fecha_inicio AND s.fecha_fin)
+          OR
+          (pa.anio > EXTRACT(YEAR FROM CURRENT_DATE)
+           AND s.codigo_subperiodo = (
+               SELECT sp2.codigo_subperiodo
+               FROM subperiodos sp2
+               WHERE sp2.id_periodo = pa.id_periodo
+               ORDER BY sp2.fecha_inicio ASC
+               LIMIT 1
+           ))
+      )
+    ORDER BY s.fecha_inicio ASC
+    LIMIT 1
+) sp ON TRUE
+WHERE a.dni = @NumDocUsuario;";
 
             var alumnos = await connection.QueryAsync<PerfilDTO>(sql, new { NumDocUsuario = numDocUsuario });
             return alumnos.AsList();
@@ -579,26 +596,39 @@ namespace MyPortalStudent.Funciones
         public async Task<List<NotasxBimestreDTO>> getNotasxBimestre(int idAlum, int anio, string codCurso, string codSubperiodo)
         {
             await using var connection = await GetConnectionAsync();
-            
-            const string sql = @"
-                SELECT 
-                    alumno,
-                    apellido_paterno AS ApellidoPaterno,
-                    apellido_materno AS ApellidoMaterno,
-                    cod_curso as codigoCurso,
-                    descripcion_curso AS DescripcionCurso,
-                    cod_periodo AS CodigoPeriodo,
-                    descripcion_periodo AS DescripcionPeriodo,
-                    cod_subperiodo AS CodigoSubperiodo,
-                    descripcion_subperiodo AS DescripcionSubperiodo,
-                    nota,
-                    peso,
-                    tipo_nota AS TipoNota
-                FROM obtener_notas_por_curso_subperiodo(@IdAlum, @Anio, @CodCurso, @CodSubperiodo)";
-            var parameters = new { IdAlum = idAlum, Anio = anio, CodCurso = codCurso, CodSubperiodo = codSubperiodo};
-            
-            var notas = await connection.QueryAsync<NotasxBimestreDTO>(sql, parameters);
-            return notas.AsList();
+
+            const string sql = "SELECT obtener_notas_por_curso_subperiodo(@IdAlum, @Anio, @CodCurso, @CodSubperiodo)";
+            var parameters = new { IdAlum = idAlum, Anio = anio, CodCurso = codCurso, CodSubperiodo = codSubperiodo };
+
+            var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(sql, parameters);
+
+            if (string.IsNullOrEmpty(jsonResult))
+            {
+                // La función no devolvió nada, lo que puede ser un error.
+                // Devolvemos una lista vacía para que el controlador lo maneje como un 404.
+                return new List<NotasxBimestreDTO>();
+            }
+
+            // Usamos JsonDocument para un parseo eficiente y para inspeccionar la estructura.
+            using var jsonDoc = JsonDocument.Parse(jsonResult);
+            var root = jsonDoc.RootElement;
+
+            // Verificamos si la operación en la BD fue exitosa.
+            if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+            {
+                // Si fue exitosa, deserializamos el array 'data'.
+                if (root.TryGetProperty("data", out var dataElement))
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var notas = JsonSerializer.Deserialize<List<NotasxBimestreDTO>>(dataElement.GetRawText(), options);
+                    return notas ?? new List<NotasxBimestreDTO>();
+                }
+            }
+
+            // Si 'success' es false o no se encuentra la propiedad 'data',
+            // devolvemos una lista vacía. El mensaje de error de la BD se podría loggear aquí si fuera necesario.
+            // var message = root.TryGetProperty("message", out var msg) ? msg.GetString() : "Error desconocido desde BD.";
+            return new List<NotasxBimestreDTO>();
         }
 
         public async Task<List<PagoDTO>> getPagosPorAlumno(int idAlumno, int anio)
@@ -1420,7 +1450,7 @@ namespace MyPortalStudent.Funciones
                 INNER JOIN curso c ON mc.id_curso = c.id_curso
                 LEFT JOIN detalleseccionasignada dsa ON dsa.id_seccion = mc.id_seccion
                 LEFT JOIN docente doc ON dsa.id_docente = doc.id_docente
-                LEFT JOIN seccion sec ON dsa.id_seccion = sec.id_seccion
+                LEFT JOIN seccion sec ON COALESCE(dsa.id_seccion, mc.id_seccion) = sec.id_seccion
                 LEFT JOIN aula au ON dsa.id_aula = au.id_aula
                 --Si el alumno es de tipo 'c' -> se une a subperiodos
                 LEFT JOIN LATERAL (
@@ -1439,7 +1469,7 @@ namespace MyPortalStudent.Funciones
                 LEFT JOIN LATERAL (
                     SELECT *
                     FROM periodoacademico pa
-                    WHERE a.tipo_institucion = 'i'
+                    WHERE a.tipo_institucion ILIKE 'i'
                       AND pa.id_periodo = m.id_periodo
                       AND (
                           CURRENT_DATE BETWEEN pa.fecha_inicio AND pa.fecha_fin

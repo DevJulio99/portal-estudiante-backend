@@ -323,7 +323,7 @@ namespace MyPortalStudent.Services
                     WHERE 
                         m.id_alumno = @idAlumno
                         AND n.tipo_nota = 'Promedio Final'
-                        AND current_date between pa.fecha_inicio and pa.fecha_fin
+                        --AND current_date between pa.fecha_inicio and pa.fecha_fin
                 )
                 SELECT 
                     nf.id_subperiodo,
