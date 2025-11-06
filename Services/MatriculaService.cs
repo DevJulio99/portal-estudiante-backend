@@ -315,6 +315,7 @@ namespace MyPortalStudent.Services
                     INNER JOIN notas n 
                         ON m.id_periodo = n.id_periodo
                         AND mc.id_curso = n.id_curso
+                        AND m.id_alumno = n.id_alumno
                     INNER JOIN curso c
                         ON mc.id_curso = c.id_curso
                     INNER JOIN periodoacademico pa
