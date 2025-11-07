@@ -154,28 +154,43 @@ namespace MyPortalStudent.Controllers
         /// Actualiza el estado de una matrícula
         /// </summary>
         /// <param name="idMatricula">ID de la matrícula</param>
-        /// <param name="nuevoEstado">Nuevo estado de la matrícula</param>
+        /// <param name="request">DTO con el nuevo estado</param>
         /// <returns>Resultado de la operación</returns>
         [HttpPut("actualizar-estado/{idMatricula}")]
-        public async Task<ActionResult> ActualizarEstadoMatricula(int idMatricula, [FromBody] string nuevoEstado)
+        public async Task<ActionResult> ActualizarEstadoMatricula(int idMatricula, [FromBody] ActualizarEstadoMatriculaDTO request)
         {
-            var resultado = await _matriculaService.ActualizarEstadoMatricula(idMatricula, nuevoEstado);
-            
-            if (resultado)
+            try
             {
-                return Ok(new ApiResponse<object>
+                var resultado = await _matriculaService.ActualizarEstadoMatricula(idMatricula, request.NuevoEstado);
+                
+                if (resultado)
                 {
-                    Success = true,
-                    Message = "Estado de matrícula actualizado correctamente"
-                });
+                    string mensaje = request.NuevoEstado == "Inactiva" 
+                        ? "Matrícula desactivada correctamente" 
+                        : "Estado de matrícula actualizado correctamente";
+                    
+                    return Ok(new ApiResponse<object>
+                    {
+                        Success = true,
+                        Message = mensaje
+                    });
+                }
+                else
+                {
+                    return Ok(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "No se pudo actualizar el estado de la matrícula"
+                    });
+                }
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                // Alineando con el patrón de PortalController de retornar Ok con Success = false para fallos de lógica de negocio
+                // Manejar excepciones de validación de la base de datos
                 return Ok(new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "No se pudo actualizar el estado de la matrícula"
+                    Message = ex.Message
                 });
             }
         }

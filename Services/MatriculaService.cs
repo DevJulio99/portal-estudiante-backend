@@ -194,7 +194,14 @@ namespace MyPortalStudent.Services
                 p_nuevo_estado = nuevoEstado
             };
 
-            return await connection.ExecuteScalarAsync<bool>(sql, parameters);
+            try
+            {
+                return await connection.ExecuteScalarAsync<bool>(sql, parameters);
+            }
+            catch (PostgresException ex)
+            {
+                throw new InvalidOperationException(ex.MessageText, ex);
+            }
         }
 
         public async Task<bool> DesactivarMatricula(int idMatricula)
