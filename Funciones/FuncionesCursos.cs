@@ -1260,8 +1260,7 @@ WHERE a.dni = @NumDocUsuario;";
             }
             await using var connection = await GetConnectionAsync();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_cursos_sede_paginado(@codigoSede, @pagina, @itemsPorPagina)", connection);
-            cmd.Parameters.AddWithValue("codigoSede", listaCurso.codigoSede);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from listar_cursos_sede_paginado(@pagina, @itemsPorPagina)", connection);
             cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", listaCurso.itemsPorPagina);
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
@@ -1295,8 +1294,7 @@ WHERE a.dni = @NumDocUsuario;";
             }
 
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_cursos_paginado(@codigoSede, @filtro, @pagina, @itemsPorPagina)", connection);
-            cmd.Parameters.AddWithValue("codigoSede", filtroCurso.codigoSede);
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"SELECT * from buscar_cursos_paginado(@filtro, @pagina, @itemsPorPagina)", connection);
             cmd.Parameters.AddWithValue("filtro", filtroCurso.filtro);
             cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemsPorPagina", filtroCurso.itemsPorPagina);
