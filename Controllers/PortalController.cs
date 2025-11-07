@@ -5,6 +5,7 @@ using MyPortalStudent.Domain;
 using MyPortalStudent.Domain.Ifunciones;
 using MyPortalStudent.Utils;
 using System.Security.Claims;
+using MyPortalStudent.Domain.DTOs;
 
 namespace MyPortalStudent.Controllers
 {
@@ -485,6 +486,19 @@ namespace MyPortalStudent.Controllers
             }
 
             return Ok(new ApiResponse<List<ReporteMatriculaColegioDTO>> { Data = cursos, Message = "Cursos del alumno encontrados" });
+        }
+
+        [HttpGet("categorias-documento")]
+        public async Task<IActionResult> GetCategoriasDocumento()
+        {
+            var categorias = await _funcionesApi.GetCategoriasDocumento();
+
+            if (categorias == null || !categorias.Any())
+            {
+                return NotFound(new ApiResponse<object> { Success = false, Message = "No se encontraron categorías de documentos." });
+            }
+
+            return Ok(new ApiResponse<List<CategoriaDocumentoListarDTO>> { Data = categorias, Message = "Categorías de documentos encontradas" });
         }
     }
 }

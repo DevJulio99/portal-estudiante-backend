@@ -1,3 +1,5 @@
+using MyPortalStudent.Domain.DTOs;
+
 namespace MyPortalStudent.Domain.Ifunciones {
 public interface IFuncionesApi
     {
@@ -16,6 +18,7 @@ public interface IFuncionesApi
         Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio);
         Task<List<CalendarioAcademicoDTO>> GetCalendarioAcademico(int anio);
         Task<List<CategoriaDocumentoDTO>> GetDocumentosConCategoria();
+         Task<List<CategoriaDocumentoListarDTO>> GetCategoriasDocumento();
         Task<List<EventoDTO>> GetEventos();
         Task<List<UbicacionEventoDTO>> GetUbicacionesEvento(int eventoId);
         Task<List<ObligacionPorPeriodoDTO>> GetObligacionesPagadas(int idAlumno);

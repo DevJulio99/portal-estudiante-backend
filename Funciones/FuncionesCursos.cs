@@ -1482,5 +1482,34 @@ WHERE a.dni = @NumDocUsuario;";
             var cursos = await connection.QueryAsync<ReporteMatriculaColegioDTO>(sql, new { idAlumno });
             return cursos.AsList();
         }
+
+        public async Task<List<CategoriaDocumentoListarDTO>> GetCategoriasDocumento()
+        {
+            await using var connection = await GetConnectionAsync();
+            const string sql = "SELECT listar_categorias()";
+
+            var jsonResult = await connection.QuerySingleOrDefaultAsync<string>(sql);
+
+            if (string.IsNullOrEmpty(jsonResult))
+            {
+                throw new InvalidOperationException("La función de base de datos para listar categorías no devolvió un resultado.");
+            }
+
+            using var jsonDoc = JsonDocument.Parse(jsonResult);
+            var root = jsonDoc.RootElement;
+
+            if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+            {
+                if (root.TryGetProperty("data", out var dataElement))
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var categorias = JsonSerializer.Deserialize<List<CategoriaDocumentoListarDTO>>(dataElement.GetRawText(), options);
+                    return categorias ?? new List<CategoriaDocumentoListarDTO>();
+                }
+            }
+
+            var message = root.TryGetProperty("message", out var msg) ? msg.GetString() : "Error desconocido desde la base de datos.";
+            throw new InvalidOperationException(message);
+        }
     }
 }
