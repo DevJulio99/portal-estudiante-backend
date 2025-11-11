@@ -7,6 +7,7 @@ public class ObligacionPagadaDTO
     public int NumeroCuota { get; set; }
     public decimal Importe { get; set; }
     public decimal MontoPagado { get; set; }
+    public int? IdPagoOrigen { get; set; } // Campo para vincular con pagos pendientes
 }
 
 public class ObligacionPorPeriodoDTO

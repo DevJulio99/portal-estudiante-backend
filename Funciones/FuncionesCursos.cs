@@ -635,13 +635,38 @@ WHERE a.dni = @NumDocUsuario;";
         {
             await using var connection = await GetConnectionAsync();
 
-            const string sql = "SELECT * FROM get_pagos_por_alumno(@IdAlumno, @Anio)";
-            
-            // Dapper mapeará automáticamente las columnas a las propiedades del DTO.
-            // id_pago -> IdPago, documento_pago -> DocumentoPago, f_vencimiento -> FechaVencimiento, etc.
-            var pagos = await connection.QueryAsync<PagoDTO>(sql, new { IdAlumno = idAlumno, Anio = anio });
+            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM get_pagos_por_alumno(@IdAlumno, @Anio)", connection);
+            cmd.Parameters.AddWithValue("IdAlumno", idAlumno);
+            cmd.Parameters.AddWithValue("Anio", anio);
 
-            return pagos.AsList();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var pagosList = new List<PagoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                pagosList.Add(new PagoDTO
+                {
+                    IdPago = reader["id_pago"] != DBNull.Value ? (int)reader["id_pago"] : 0,
+                    DocumentoPago = reader["documento_pago"] != DBNull.Value ? reader["documento_pago"].ToString() ?? "" : "",
+                    FechaVencimiento = reader["f_vencimiento"] != DBNull.Value ? (DateTime)reader["f_vencimiento"] : DateTime.MinValue,
+                    Ciclo = reader["ciclo"] != DBNull.Value ? reader["ciclo"].ToString() ?? "" : "",
+                    Saldo = reader["saldo"] != DBNull.Value ? (decimal)reader["saldo"] : 0,
+                    Mora = reader["mora"] != DBNull.Value ? (decimal)reader["mora"] : 0,
+                    TotalAPagar = reader["total_a_pagar"] != DBNull.Value ? (decimal)reader["total_a_pagar"] : 0,
+                    Detalle = reader["detalle"] != DBNull.Value ? reader["detalle"].ToString() ?? "" : "",
+                    Imagen = reader["imagen"] != DBNull.Value ? reader["imagen"].ToString() : null,
+                    Anio = reader["anio"] != DBNull.Value ? (int)reader["anio"] : 0,
+                    total = 0,
+                    Estado = reader["estado"] != DBNull.Value ? reader["estado"].ToString() ?? "Pendiente" : "Pendiente",
+                    FechaSubidaComprobante = reader["fecha_subida_comprobante"] != DBNull.Value ? (DateTime?)reader["fecha_subida_comprobante"] : null,
+                    FechaAprobacion = reader["fecha_aprobacion"] != DBNull.Value ? (DateTime?)reader["fecha_aprobacion"] : null,
+                    IdUsuarioAprobador = reader["id_usuario_aprobador"] != DBNull.Value ? (int?)reader["id_usuario_aprobador"] : null,
+                    Observaciones = reader["observaciones"] != DBNull.Value ? reader["observaciones"].ToString() : null
+                });
+            }
+
+            return pagosList;
         }
 
         public async Task<List<ResumenPagosDTO?>> GetResumenPagosPorAlumno(int idAlumno, int anio)
@@ -681,8 +706,9 @@ WHERE a.dni = @NumDocUsuario;";
 
             await using var connection = await GetConnectionAsync();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from listar_pagos_por_sede_paginado(@codSede, @pagina, @itemPagina)", connection);
-            cmd.Parameters.AddWithValue("codSede", sedePaginadoDto.codigoSede);
+            // La función SQL obtiene el codigo_sede automáticamente del contexto del tenant (multi-tenancy)
+            // El parámetro codigoSede se mantiene en el DTO por compatibilidad con el frontend, pero no se usa
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"select * from listar_pagos_por_sede_paginado(@pagina, @itemPagina)", connection);
             cmd.Parameters.AddWithValue("pagina", pagina);
             cmd.Parameters.AddWithValue("itemPagina", sedePaginadoDto.itemsPorPagina);
 
@@ -696,15 +722,22 @@ WHERE a.dni = @NumDocUsuario;";
                 {
                     IdPago = (int)reader["idpago"],
                     DocumentoPago = reader["documentopago"].ToString() ?? "",
-                    FechaVencimiento = (DateTime)reader["fechav"],
+                    FechaVencimiento = reader["fechav"] != DBNull.Value ? (DateTime)reader["fechav"] : DateTime.MinValue,
                     Ciclo = reader["ciclopago"].ToString() ?? "",
-                    Saldo = (decimal)reader["saldopago"],
-                    Mora = (decimal)reader["morapago"],
-                    TotalAPagar = (decimal)reader["totalpago"],
+                    Saldo = reader["saldopago"] != DBNull.Value ? (decimal)reader["saldopago"] : 0,
+                    Mora = reader["morapago"] != DBNull.Value ? (decimal)reader["morapago"] : 0,
+                    TotalAPagar = reader["totalpago"] != DBNull.Value ? (decimal)reader["totalpago"] : 0,
                     Detalle = reader["detallepago"].ToString() ?? "",
-                    Imagen = reader["imagepago"].ToString() ?? "",
-                    Anio = (int)reader["aniopago"],
-                    total = Int32.Parse(reader["total_resultados"].ToString() ?? "0")
+                    Imagen = reader["imagepago"] != DBNull.Value ? reader["imagepago"].ToString() : null,
+                    Anio = reader["aniopago"] != DBNull.Value ? (int)reader["aniopago"] : 0,
+                    total = Int32.Parse(reader["total_resultados"].ToString() ?? "0"),
+                    // Campos de estado
+                    Estado = reader["estado"] != DBNull.Value ? reader["estado"].ToString() ?? "Pendiente" : "Pendiente",
+                    FechaSubidaComprobante = reader["fecha_subida_comprobante"] != DBNull.Value ? (DateTime?)reader["fecha_subida_comprobante"] : null,
+                    FechaAprobacion = reader["fecha_aprobacion"] != DBNull.Value ? (DateTime?)reader["fecha_aprobacion"] : null,
+                    IdUsuarioAprobador = reader["id_usuario_aprobador"] != DBNull.Value ? (int?)reader["id_usuario_aprobador"] : null,
+                    Observaciones = reader["observaciones"] != DBNull.Value ? reader["observaciones"].ToString() : null,
+                    NombreAlumno = reader["nombre_alumno"] != DBNull.Value ? reader["nombre_alumno"].ToString() : null
                 });
             }
 
@@ -924,7 +957,8 @@ WHERE a.dni = @NumDocUsuario;";
                     NumeroDocumentoPago = reader["numero_documento_pago"].ToString() ?? "",
                     NumeroCuota = reader["numero_cuota"] != DBNull.Value ? (int)reader["numero_cuota"] : 0,
                     Importe = reader["importe"] != DBNull.Value ? (decimal)reader["importe"] : 0,
-                    MontoPagado = reader["monto_pagado"] != DBNull.Value ? (decimal)reader["monto_pagado"] : 0
+                    MontoPagado = reader["monto_pagado"] != DBNull.Value ? (decimal)reader["monto_pagado"] : 0,
+                    IdPagoOrigen = reader["id_pago_origen"] != DBNull.Value ? (int?)reader["id_pago_origen"] : null
                 });
             }
 
@@ -941,59 +975,12 @@ WHERE a.dni = @NumDocUsuario;";
                         NumeroDocumentoPago = o.NumeroDocumentoPago,
                         NumeroCuota = o.NumeroCuota,
                         Importe = o.Importe,
-                        MontoPagado = o.MontoPagado
+                        MontoPagado = o.MontoPagado,
+                        IdPagoOrigen = o.IdPagoOrigen
                     }).ToList()
                 }).ToList();
 
             return obligacionesPorPeriodo;
-        }
-
-        public async Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto)
-        {
-            await using var connection = await GetConnectionAsync();
-
-            // Validar que el idPago sea válido
-            if (imagenPagoDto.idPago <= 0)
-            {
-                throw new ArgumentException("El ID del pago debe ser un número positivo.");
-            }
-
-            if (string.IsNullOrWhiteSpace(imagenPagoDto.imagen))
-            {
-                throw new ArgumentException("La imagen no puede estar vacía.");
-            }
-
-            const string query = @"UPDATE pagos 
-                                  SET imagen = @imagen 
-                                  WHERE id_pago = @idPago";
-
-            using var cmd = new NpgsqlCommand(query, connection);
-            cmd.Parameters.AddWithValue("@idPago", imagenPagoDto.idPago);
-            cmd.Parameters.AddWithValue("@imagen", imagenPagoDto.imagen);
-            
-            try
-            {
-                var rowsAffected = await cmd.ExecuteNonQueryAsync();
-                
-                if (rowsAffected == 0)
-                {
-                    throw new InvalidOperationException($"No se encontró el pago con ID {imagenPagoDto.idPago} o no pertenece a la sede actual.");
-                }
-                
-                return true;
-            }
-            catch (PostgresException ex)
-            {
-                throw new InvalidOperationException($"Error de base de datos al actualizar la imagen del pago: {ex.MessageText}", ex);
-            }
-            catch (InvalidOperationException)
-            {
-                throw; // Re-lanzar la excepción de validación
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("Error al actualizar la imagen del pago.", ex);
-            }
         }
 
         public async Task<List<AlumnoDTO>> getAlumnoPorSede(SedePaginadoDTO listaAlumno)
@@ -1508,6 +1495,113 @@ WHERE a.dni = @NumDocUsuario;";
 
             var message = root.TryGetProperty("message", out var msg) ? msg.GetString() : "Error desconocido desde la base de datos.";
             throw new InvalidOperationException(message);
+        }
+
+        public async Task<Boolean> setImagenPago(ImagenPagoDto imagenPagoDto)
+        {
+            await using var connection = await GetConnectionAsync();
+
+            if (imagenPagoDto.idPago <= 0)
+            {
+                throw new ArgumentException("El ID del pago debe ser un número positivo.");
+            }
+
+            if (string.IsNullOrWhiteSpace(imagenPagoDto.imagen))
+            {
+                throw new ArgumentException("La imagen no puede estar vacía.");
+            }
+
+            const string sql = "SELECT actualizar_imagen_pago(@p_id_pago, @p_imagen)";
+            
+            var jsonResult = await connection.ExecuteScalarAsync<string>(sql, new 
+            { 
+                p_id_pago = imagenPagoDto.idPago, 
+                p_imagen = imagenPagoDto.imagen 
+            });
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var result = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+            if (result == null || !result.Success)
+            {
+                throw new InvalidOperationException(result?.Message ?? "Error al actualizar la imagen del pago.");
+            }
+
+            return true;
+        }
+
+        public async Task<Boolean> AprobarPago(AprobarPagoDTO aprobarPagoDto)
+        {
+            await using var connection = await GetConnectionAsync();
+
+            if (aprobarPagoDto.IdPago <= 0)
+            {
+                throw new ArgumentException("El ID del pago debe ser un número positivo.");
+            }
+
+            if (string.IsNullOrWhiteSpace(aprobarPagoDto.Estado) || 
+                !new[] { "Aprobado", "Rechazado" }.Contains(aprobarPagoDto.Estado))
+            {
+                throw new ArgumentException("Estado inválido. Debe ser 'Aprobado' o 'Rechazado'.");
+            }
+
+            const string sql = "SELECT aprobar_rechazar_pago(@p_id_pago, @p_id_usuario_aprobador, @p_estado, @p_observaciones)";
+            
+            var jsonResult = await connection.ExecuteScalarAsync<string>(sql, new 
+            { 
+                p_id_pago = aprobarPagoDto.IdPago,
+                p_id_usuario_aprobador = aprobarPagoDto.IdUsuarioAprobador,
+                p_estado = aprobarPagoDto.Estado,
+                p_observaciones = aprobarPagoDto.Observaciones ?? (object)DBNull.Value
+            });
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var result = JsonSerializer.Deserialize<BaseResponseDTO>(jsonResult, options);
+
+            if (result == null || !result.Success)
+            {
+                throw new InvalidOperationException(result?.Message ?? "Error al aprobar/rechazar el pago.");
+            }
+
+            return true;
+        }
+
+        public async Task<List<PagoDTO>> GetPagosEnRevision(string? codigoSede)
+        {
+            await using var connection = await GetConnectionAsync();
+
+            // La función SQL obtiene el codigo_sede automáticamente del contexto del tenant
+            // El parámetro codigoSede se mantiene por compatibilidad con la interfaz, pero no se usa
+            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM obtener_pagos_en_revision()", connection);
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            
+            var pagosList = new List<PagoDTO>();
+
+            while (await reader.ReadAsync())
+            {
+                pagosList.Add(new PagoDTO
+                {
+                    IdPago = reader["id_pago"] != DBNull.Value ? (int)reader["id_pago"] : 0,
+                    DocumentoPago = reader["documento_pago"] != DBNull.Value ? reader["documento_pago"].ToString() ?? "" : "",
+                    FechaVencimiento = reader["f_vencimiento"] != DBNull.Value ? (DateTime)reader["f_vencimiento"] : DateTime.MinValue,
+                    Ciclo = reader["ciclo"] != DBNull.Value ? reader["ciclo"].ToString() ?? "" : "",
+                    Saldo = reader["saldo"] != DBNull.Value ? (decimal)reader["saldo"] : 0,
+                    Mora = reader["mora"] != DBNull.Value ? (decimal)reader["mora"] : 0,
+                    TotalAPagar = reader["total_a_pagar"] != DBNull.Value ? (decimal)reader["total_a_pagar"] : 0,
+                    Detalle = reader["detalle"] != DBNull.Value ? reader["detalle"].ToString() ?? "" : "",
+                    Imagen = reader["imagen"] != DBNull.Value ? reader["imagen"].ToString() : null,
+                    Anio = reader["anio"] != DBNull.Value ? (int)reader["anio"] : 0,
+                    total = 0,
+                    Estado = reader["estado"] != DBNull.Value ? reader["estado"].ToString() ?? "Pendiente" : "Pendiente",
+                    FechaSubidaComprobante = reader["fecha_subida_comprobante"] != DBNull.Value ? (DateTime?)reader["fecha_subida_comprobante"] : null,
+                    FechaAprobacion = reader["fecha_aprobacion"] != DBNull.Value ? (DateTime?)reader["fecha_aprobacion"] : null,
+                    IdUsuarioAprobador = reader["id_usuario_aprobador"] != DBNull.Value ? (int?)reader["id_usuario_aprobador"] : null,
+                    Observaciones = reader["observaciones"] != DBNull.Value ? reader["observaciones"].ToString() : null,
+                    NombreAlumno = reader["nombre_alumno"] != DBNull.Value ? reader["nombre_alumno"].ToString() : null
+                });
+            }
+
+            return pagosList;
         }
     }
 }

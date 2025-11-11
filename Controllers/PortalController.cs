@@ -327,8 +327,33 @@ namespace MyPortalStudent.Controllers
         public async Task<IActionResult> RegistrarImagenPago(ImagenPagoDto imagenPagoDto)
         {
             var status = await _funcionesApi.setImagenPago(imagenPagoDto);
-            var apiResult = new ApiResponse<object> { Success = status, Message = "Se registro imagen" };
+            var apiResult = new ApiResponse<object> { Success = status, Message = "Se registró la imagen y el pago está en revisión" };
             return Ok(apiResult);
+        }
+
+        [HttpPost("aprobar-pago")]
+        public async Task<IActionResult> AprobarPago(AprobarPagoDTO aprobarPagoDto)
+        {
+            var status = await _funcionesApi.AprobarPago(aprobarPagoDto);
+            var message = aprobarPagoDto.Estado == "Aprobado" 
+                ? "El pago ha sido aprobado correctamente" 
+                : "El pago ha sido rechazado";
+            var apiResult = new ApiResponse<object> { Success = status, Message = message };
+            return Ok(apiResult);
+        }
+
+        [HttpGet("pagos-en-revision")]
+        public async Task<IActionResult> GetPagosEnRevision()
+        {
+            var pagos = await _funcionesApi.GetPagosEnRevision(null);
+            
+            // Devolver lista vacía si no hay datos (no es un error, es un caso válido)
+            if (pagos == null || pagos.Count == 0)
+            {
+                return Ok(new ApiResponse<List<PagoDTO>> { Data = new List<PagoDTO>(), Message = "No hay pagos pendientes de revisión" });
+            }
+            
+            return Ok(new ApiResponse<List<PagoDTO>> { Data = pagos, Message = "Pagos en revisión encontrados" });
         }
 
         [HttpPost("listar-pago-sede")]
@@ -500,5 +525,6 @@ namespace MyPortalStudent.Controllers
 
             return Ok(new ApiResponse<List<CategoriaDocumentoListarDTO>> { Data = categorias, Message = "Categorías de documentos encontradas" });
         }
+
     }
 }

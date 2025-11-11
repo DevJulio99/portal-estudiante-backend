@@ -12,3 +12,4 @@ namespace MyPortalStudent.Domain.DTOs
         public string TipoInstitucion { get; set; } = "";
     }
 }
+
