@@ -33,8 +33,8 @@ namespace MyPortalStudent.Controllers
                 return this.StatusCode(401, new ApiResult<string>
                 {
                     Success = false,
-                    Code = ConstantesPortal.ErrorRequest.code4000,
-                    Message = ConstantesPortal.ErrorRequest.Message4000,
+                    Code = ConstantesPortal.ErrorRequest.code4003,
+                    Message = ConstantesPortal.ErrorRequest.Message4003,
                     validations = responseValidation.validations
                 });
             }
