@@ -182,7 +182,7 @@ namespace MyPortalStudent.Controllers
         }
 
         [HttpGet("listar-estado-competencia/{idPostulante}/{idCompetencia}")]
-        public async Task<ActionResult> RegistrarEstadoCompetencia(int idPostulante, int idCompetencia)
+        public async Task<ActionResult> ListarEstadoCompetencia(int idPostulante, int idCompetencia)
         {
             var apiResult = new ApiResult<Object>();
             var lista = await _service.listarEstadoCompetencia(idPostulante, idCompetencia);

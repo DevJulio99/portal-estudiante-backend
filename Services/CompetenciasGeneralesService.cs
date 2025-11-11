@@ -5,6 +5,7 @@ using MyPortalStudent.Utils;
 using Npgsql;
 using System.Data;
 using System.Text.Json;
+using Dapper;
 
 namespace MyPortalStudent.Services
 {
@@ -243,6 +244,9 @@ namespace MyPortalStudent.Services
             cmd.Parameters.AddWithValue("@p_respuesta_seleccionada", request.respuestSeleccionada.ToUpper());
             cmd.Parameters.AddWithValue("@p_id_postulante", request.idPostulante);
             cmd.Parameters.AddWithValue("@p_id_pregunta", request.idPregunta);
+            cmd.Parameters.AddWithValue("@p_id_competencia", request.idCompetencia);
+            cmd.Parameters.AddWithValue("@p_num_pregunta_param", request.ultimaPregunta);
+            cmd.Parameters.AddWithValue("@p_tiempo_ultima_pregunta_param", request.tiempoUltimaPregunta);
 
             int rowAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -515,33 +519,28 @@ namespace MyPortalStudent.Services
         //    return ultimaRespuestaExamen;
         // }
 
-        public async Task<List<ListaEstadoCompetenciaDTO>> listarEstadoCompetencia(int idPostulante, int? idCompetencia)
+        public async Task<List<ListaEstadoCompetenciaDTO>> listarEstadoCompetencia(int idPostulante, int idCompetencia)
         {
-            string queryDb = "";
-            if(idCompetencia == null){
-                queryDb = @$"select * from estado_competencia where ""ID_POSTULANTE"" = '{idPostulante}'";
-            }else {
-                queryDb = @$"select * from estado_competencia where ""ID_POSTULANTE"" = '{idPostulante}' and ""ID_COMPETENCIA"" = {idCompetencia}";
-            }
             await using var connection = await GetConnectionAsync();
 
-            using NpgsqlCommand cmd = new NpgsqlCommand(queryDb, connection);
-            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-            var lista = new List<ListaEstadoCompetenciaDTO>([]);
+            const string sql = "SELECT * FROM public.listar_estado_competencia(@p_id_postulante, @p_id_competencia)";
 
-            while (reader.Read())
+            var parameters = new { p_id_postulante = idPostulante, p_id_competencia = idCompetencia };
+
+            var result = await connection.QueryAsync<dynamic>(sql, parameters);
+
+            return result.Select(item => new ListaEstadoCompetenciaDTO
             {
-                lista.Add(new ListaEstadoCompetenciaDTO(){
-                    idPostulante = (int)reader["ID_POSTULANTE"],
-                    idCompetencia = (int)reader["ID_COMPETENCIA"],
-                    estado = reader["ESTADO"].ToString().ToUpper() ?? "",
-                    tiempoIniciado = !string.IsNullOrEmpty(reader["TIEMPO_INICIADO"].ToString() ?? "") ? DateTime.Parse(reader["TIEMPO_INICIADO"].ToString()).ToString("MM/dd/yyyy HH:mm:ss") : "",
-                    tiempoFinalizado = !string.IsNullOrEmpty(reader["TIEMPO_FINALIZADO"]?.ToString() ?? "") ? DateTime.Parse(reader["TIEMPO_FINALIZADO"].ToString()).ToString("MM/dd/yyyy HH:mm:ss") : ""
-                });
-            }
-
-            return lista;
+                idPostulante = item.idpostulante,
+                idCompetencia = item.idcompetencia,
+                estado = item.estado?.ToString().ToUpper() ?? "",
+                tiempoIniciado = item.tiempoiniciado != null ? ((DateTime)item.tiempoiniciado).ToString("MM/dd/yyyy HH:mm:ss") : "",
+                tiempoFinalizado = item.tiempofinalizado != null ? ((DateTime)item.tiempofinalizado).ToString("MM/dd/yyyy HH:mm:ss") : "",
+                ultimaPregunta = item.ultimapregunta ?? 0,
+                tiempoUltimaPregunta = item.tiempoultimapregunta ?? 0
+            }).ToList();
         }
+
 
         public async Task<Boolean> registrarEstadoCompetencia(EstadoCompetenciaDTO estadoCompetenciaDto)
         {
