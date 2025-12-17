@@ -54,6 +54,8 @@ namespace MyPortalStudent.Domain.DTOs
             public static string Message4009 { get; } = "Conflicto";
             public const string code40010 = "PS-EVAL-40010";
             public const string Message40010 = "No hay preguntas disponibles actualmente para este examen.";
+            public const string code4003 = "PS-EVAL-4003";
+            public const string Message4003 = "Usuario o contraseña incorrectos. Inténtalo nuevamente.";
 
             
         }
