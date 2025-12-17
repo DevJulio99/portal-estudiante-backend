@@ -125,7 +125,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICompetenciasGeneralesService, CompetenciasGeneralesService>();
 builder.Services.AddScoped<IMatriculaService, MatriculaService>();
 builder.Services.AddScoped<INotasService, NotasService>();
-
+builder.Services.AddScoped<IAulaVirtualService, AulaVirtualService>();
 
 var app = builder.Build();
 
