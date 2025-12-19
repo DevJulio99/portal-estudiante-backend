@@ -25,5 +25,6 @@ namespace MyPortalStudent.Domain
         public string nivel { get; set; }
         public string fechaInicio { get; set; }
         public string fechaFin { get; set; }
+        public decimal porcentaje_avance { get; set; }
     }
 }

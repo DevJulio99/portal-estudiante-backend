@@ -24,5 +24,25 @@ namespace MyPortalStudent.Controllers
 
             return Ok(resultado);
         }
+
+        [HttpPost("materiales")]
+        public async Task<IActionResult> GetMateriales([FromBody] MaterialesRequestDto request)
+        {
+            var resultado = await _aulaVirtualService.GetMateriales(request);
+            if (resultado == null || !resultado.Success)
+                return NotFound(resultado);
+
+            return Ok(resultado);
+        }
+
+        [HttpPost("registrar-material")]
+        public async Task<IActionResult> RegistrarMaterial([FromBody] RegistrarMaterialRequestDto request)
+        {
+            var resultado = await _aulaVirtualService.RegistrarMaterial(request);
+            if (resultado == null || !resultado.Success)
+                return BadRequest(resultado);
+
+            return Ok(resultado);
+        }
     }
 }

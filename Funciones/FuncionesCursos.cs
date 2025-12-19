@@ -1408,63 +1408,9 @@ WHERE a.dni = @NumDocUsuario;";
         {
             await using var connection = await GetConnectionAsync();
 
-            const string sql = @"
-                SELECT DISTINCT ON (mc.id_curso)
-                    c.codigo_curso AS CodCurso, 
-                    c.descripcion_curso AS DescCurso, 
-                    c.modalidad,
-                    m.id_periodo as idPeriodo,
-                    COALESCE(sp.codigo_subperiodo, pa.codigo_periodo) AS CodigoPeriodoAcademico,
-                    COALESCE(sp.descripcion_subperiodo, pa.descripcion_periodo) AS Periodo,
-                    COALESCE(sp.fecha_inicio, pa.fecha_inicio) AS FechaInicio,
-                    COALESCE(sp.fecha_fin, pa.fecha_fin) AS FechaFin,
-                    g.""DESCRIPCION_GRADO"" AS grado,
-	                g.""NIVEL_EDUCATIVO"" AS nivel,
-	                au.descripcion_aula AS salon,
-	                sec.codigo_seccion,
-	                sec.descripcion AS seccion,
-	                sec.ciclo,
-                    doc.nombre || ' ' || doc.apellido_paterno || ' ' || doc.apellido_materno AS nombreDocente,
-	                doc.correo as correoDocente
-                FROM matricula_curso mc
-                INNER JOIN matricula m ON mc.id_matricula = m.id_matricula
-                INNER JOIN grado g ON m.id_grado = g.""ID_GRADO""
-                INNER JOIN alumno a ON a.id_alumno = m.id_alumno
-                INNER JOIN curso c ON mc.id_curso = c.id_curso
-                LEFT JOIN detalleseccionasignada dsa ON dsa.id_seccion = mc.id_seccion
-                LEFT JOIN docente doc ON dsa.id_docente = doc.id_docente
-                LEFT JOIN seccion sec ON COALESCE(dsa.id_seccion, mc.id_seccion) = sec.id_seccion
-                LEFT JOIN aula au ON dsa.id_aula = au.id_aula
-                --Si el alumno es de tipo 'c' -> se une a subperiodos
-                LEFT JOIN LATERAL (
-                    SELECT *
-                    FROM subperiodos sp
-                    WHERE a.tipo_institucion ILIKE 'c'
-                      AND sp.id_periodo = m.id_periodo
-                      AND (
-                          CURRENT_DATE BETWEEN sp.fecha_inicio AND sp.fecha_fin
-                          OR sp.fecha_inicio > CURRENT_DATE
-                      )
-                    ORDER BY sp.fecha_inicio
-                    LIMIT 1
-                ) sp ON TRUE
-                --Si el alumno es de tipo 'i' -> se une a periodoacademico
-                LEFT JOIN LATERAL (
-                    SELECT *
-                    FROM periodoacademico pa
-                    WHERE a.tipo_institucion ILIKE 'i'
-                      AND pa.id_periodo = m.id_periodo
-                      AND (
-                          CURRENT_DATE BETWEEN pa.fecha_inicio AND pa.fecha_fin
-                          OR pa.fecha_inicio > CURRENT_DATE
-                      )
-                    ORDER BY pa.fecha_inicio
-                    LIMIT 1
-                ) pa ON TRUE
-                WHERE m.id_alumno = @idAlumno AND m.activo = true
-                ORDER BY mc.id_curso, dsa.id_detalle";
+            const string sql = "SELECT * FROM obtener_cursos_por_alumno(@p_id_alumno)";
 
-            var cursos = await connection.QueryAsync<ReporteMatriculaColegioDTO>(sql, new { idAlumno });
+            var cursos = await connection.QueryAsync<ReporteMatriculaColegioDTO>(sql, new { p_id_alumno = idAlumno });
             return cursos.AsList();
         }
 

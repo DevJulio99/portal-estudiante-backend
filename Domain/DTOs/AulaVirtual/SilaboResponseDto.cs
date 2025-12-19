@@ -64,6 +64,9 @@ namespace MyPortalStudent.Domain.Dtos.AulaVirtual
 
     public class ContenidoHijoDto
     {
+        [JsonPropertyName("id_contenido_hijo")]
+        public int IdContenidoHijo { get; set; }
+
         [JsonPropertyName("tipo")]
         public string? Tipo { get; set; }
 
